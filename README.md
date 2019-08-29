@@ -1,5 +1,7 @@
 # Web-crypto
 
+[![Build Status](https://travis-ci.org/deiu/web-crypto.svg?branch=master)](https://travis-ci.org/deiu/web-crypto)
+
 This is a wrapper around the Webcrypto API available in modern browsers. It enables faster
 development of applications that require storing encrypted data.
 
