@@ -30,7 +30,7 @@ describe('Web crypto', function () {
 
   context('AES operations and key export/import', () => {
     it('Should reject if the key is not a CryptoKey', async () => {
-      let err = { code: '_ERROR_NOT_THROWN_' }
+      let err = { message: '_ERROR_NOT_THROWN_' }
       try {
         await WebCrypto.encrypt([2, 3], { data: 'hello' })
       } catch (error) {
@@ -44,7 +44,7 @@ describe('Web crypto', function () {
       const key = await WebCrypto.genAESKey()
       const ciphertext = await WebCrypto.encrypt(key, message)
 
-      let err = { code: '_ERROR_NOT_THROWN_' }
+      let err = { message: '_ERROR_NOT_THROWN_' }
       try {
         ciphertext.iv = ciphertext.iv.slice(0, 10)
         await WebCrypto.decrypt(key, ciphertext)
@@ -60,7 +60,7 @@ describe('Web crypto', function () {
       const key = await WebCrypto.genAESKey()
       const ciphertext = await WebCrypto.encrypt(key, message)
 
-      let err = { code: '_ERROR_NOT_THROWN_' }
+      let err = { message: '_ERROR_NOT_THROWN_' }
       try {
         const key2 = await WebCrypto.genAESKey()
         await WebCrypto.decrypt(key2, ciphertext)
@@ -143,7 +143,7 @@ describe('Web crypto', function () {
     const passphrase = 'mySecretPass'
 
     it('Should reject if passphrase is not a string or is empty', async () => {
-      let err = { code: '_ERROR_NOT_THROWN_' }
+      let err = { message: '_ERROR_NOT_THROWN_' }
       try {
         await WebCrypto.genEncryptedMasterKey([])
       } catch (error) {
@@ -163,7 +163,7 @@ describe('Web crypto', function () {
     })
 
     it('Should reject if the given passphrase is NOT the same as the stored one', async () => {
-      let err = { code: '_ERROR_NOT_THROWN_' }
+      let err = { message: '_ERROR_NOT_THROWN_' }
       try {
         const protectedMK = await WebCrypto.genEncryptedMasterKey(passphrase)
         await WebCrypto.decryptMasterKey(passphrase + 'modifed', protectedMK)
