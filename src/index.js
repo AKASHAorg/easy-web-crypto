@@ -1,5 +1,6 @@
 /**
- * Imported from https://github.com/QwantResearch/masq-common/
+ * Originally from https://github.com/QwantResearch/masq-common/ with modifications
+ * by Andrei Sambra
  */
 
 /**
@@ -9,10 +10,10 @@
    * @param {Number} [keySize] - Specify if the generated key is extractable
    * @returns {Promise<CryptoKey>} - The generated AES key.
    */
-const genAESKey = (extractable, mode, keySize) => {
+const genAESKey = (extractable, mode = 'AES-GCM', keySize = 128) => {
   return window.crypto.subtle.generateKey({
-    name: mode || 'AES-GCM',
-    length: keySize || 128
+    name: mode,
+    length: keySize
   }, extractable || true, ['decrypt', 'encrypt'])
 }
 
@@ -44,6 +45,19 @@ const exportKey = async (key, type = 'raw') => {
 }
 
 /**
+   * Encrypt buffer
+   *
+   * @param {ArrayBuffer} key - The AES CryptoKey
+   * @param {ArrayBuffer} data - Data to encrypt
+   * @param {Object} cipherContext - The AES cipher parameters
+   * @returns {ArrayBuffer} - The encrypted buffer
+   */
+const encryptBuffer = async (key, data, cipherContext) => {
+  const encrypted = await window.crypto.subtle.encrypt(cipherContext, key, data)
+  return new Uint8Array(encrypted)
+}
+
+/**
  * Decrypt buffer
  * @param {ArrayBuffer} key - The AES CryptoKey
  * @param {ArrayBuffer} data - Data to decrypt
@@ -60,19 +74,6 @@ const decryptBuffer = async (key, data, cipherContext) => {
       throw new Error('Unable to decrypt data')
     }
   }
-}
-
-/**
-   * Encrypt buffer
-   *
-   * @param {ArrayBuffer} key - The AES CryptoKey
-   * @param {ArrayBuffer} data - Data to encrypt
-   * @param {Object} cipherContext - The AES cipher parameters
-   * @returns {ArrayBuffer} - The encrypted buffer
-   */
-const encryptBuffer = async (key, data, cipherContext) => {
-  const encrypted = await window.crypto.subtle.encrypt(cipherContext, key, data)
-  return new Uint8Array(encrypted)
 }
 
 const checkCryptokey = (key) => {
@@ -149,13 +150,13 @@ const checkPassphrase = (str) => {
   }
 }
 
-const _checkEncodingFormat = (format) => {
+const checkEncodingFormat = (format) => {
   if (format !== 'hex' && format !== 'base64') throw new Error('Invalid encoding')
 }
 
 const genRandomBufferAsStr = (len = 16, encodingFormat = 'hex') => {
   if (encodingFormat) {
-    _checkEncodingFormat(encodingFormat)
+    checkEncodingFormat(encodingFormat)
   }
   const buf = genRandomBuffer(len)
   return buf.toString(encodingFormat)
@@ -201,19 +202,16 @@ const deriveBits = async (passPhrase, salt, iterations, hashAlgo) => {
  * @returns {Promise<keyEncryptionKey>} A promise that contains the derived key and derivation
  * parameters
  */
-const deriveKeyFromPassphrase = async (passPhrase, salt, iterations, hashAlgo) => {
+const deriveKeyFromPassphrase = async (passPhrase, salt = genRandomBuffer(16), iterations = 100000, hashAlgo = 'SHA-256') => {
   checkPassphrase(passPhrase)
-  const _hashAlgo = hashAlgo || 'SHA-256'
-  const _salt = salt || genRandomBuffer(16)
-  const _iterations = iterations || 100000
 
-  const derivedKey = await deriveBits(passPhrase, _salt, _iterations, _hashAlgo)
+  const derivedKey = await deriveBits(passPhrase, salt, iterations, hashAlgo)
   const key = await importKey(derivedKey)
   return {
     derivationParams: {
-      salt: Buffer.from(_salt).toString('hex'),
-      iterations: _iterations,
-      hashAlgo: _hashAlgo
+      salt: Buffer.from(salt).toString('hex'),
+      iterations,
+      hashAlgo
     },
     key
   }
@@ -246,6 +244,31 @@ const genEncryptedMasterKey = async (passPhrase, salt, iterations, hashAlgo) => 
 }
 
 /**
+ * Decrypt a master key by deriving the encryption key from the
+ * provided passphrase and encrypted master key.
+ *
+ * @param {string | arrayBuffer} passPhrase The passphrase that is used to derive the key
+ * @param {protectedMasterKey} protectedMasterKey - The same object returned
+ * by genEncryptedMasterKey
+ * @returns {Promise<masterKey>} A promise that contains the masterKey
+ */
+const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
+  const { derivationParams, encryptedMasterKey } = protectedMasterKey
+  const { salt, iterations, hashAlgo } = derivationParams
+  const _salt = typeof (salt) === 'string' ? Buffer.from(salt, ('hex')) : salt
+  try {
+    const derivedKey = await deriveBits(passPhrase, _salt, iterations, hashAlgo)
+    const keyEncryptionKey = await importKey(derivedKey)
+    const decryptedMasterKeyHex = await decrypt(keyEncryptionKey, encryptedMasterKey)
+    const parsedKey = Buffer.from(decryptedMasterKeyHex, 'hex')
+    return window.crypto.subtle.importKey('raw', parsedKey, { name: 'AES-GCM' }
+      , true, ['encrypt', 'decrypt'])
+  } catch (error) {
+    throw new Error('Wrong passphrase')
+  }
+}
+
+/**
  * Update the derived encryption key (KEK) based on the new passphrase from user, while retaining
  * the symmetric key that encrypts data at rest
  *
@@ -270,36 +293,15 @@ const updatePassphraseKey = async (currentPassPhrase, newPassPhrase, oldMasterKe
   }
 }
 
-/**
- * Derive a given key by deriving the encryption key from a
- * given passphrase and derivation params.
- *
- * @param {string | arrayBuffer} passPhrase The passphrase that is used to derive the key
- * @param {protectedMasterKey} protectedMasterKey - The same object returned
- * by genEncryptedMasterKey
- * @returns {Promise<masterKey>} A promise that contains the masterKey
- */
-const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
-  const { derivationParams, encryptedMasterKey } = protectedMasterKey
-  const { salt, iterations, hashAlgo } = derivationParams
-  const _salt = typeof (salt) === 'string' ? Buffer.from(salt, ('hex')) : salt
-  try {
-    const derivedKey = await deriveBits(passPhrase, _salt, iterations, hashAlgo)
-    const keyEncryptionKey = await importKey(derivedKey)
-    const decryptedMasterKeyHex = await decrypt(keyEncryptionKey, encryptedMasterKey)
-    return Buffer.from(decryptedMasterKeyHex, 'hex')
-  } catch (error) {
-    throw new Error('Wrong passphrase')
-  }
-}
-
 module.exports = {
   genAESKey,
-  genEncryptedMasterKey,
-  updatePassphraseKey,
-  decryptMasterKey,
   importKey,
   exportKey,
   encrypt,
-  decrypt
+  decrypt,
+  encryptBuffer,
+  decryptBuffer,
+  genEncryptedMasterKey,
+  decryptMasterKey,
+  updatePassphraseKey
 }
