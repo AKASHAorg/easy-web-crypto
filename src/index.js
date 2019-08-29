@@ -26,7 +26,7 @@ const genAESKey = (extractable, mode = 'AES-GCM', keySize = 128) => {
     * @returns {Promise<arrayBuffer>} - The cryptoKey
     */
 const importKey = (key, type = 'raw', mode = 'AES-GCM') => {
-  const parsedKey = Buffer.from(key, 'base64')
+  const parsedKey = (type === 'raw') ? Buffer.from(key, 'base64') : key
   return window.crypto.subtle.importKey(type, parsedKey, { name: mode }
     , true, ['encrypt', 'decrypt'])
 }
@@ -35,13 +35,12 @@ const importKey = (key, type = 'raw', mode = 'AES-GCM') => {
   * Export a CryptoKey into a raw|jwk key
   *
   * @param {CryptoKey} key - The CryptoKey
-  * @param {string} [type] - The type of the exported key
+  * @param {string} [type] - The type of the exported key: raw|jwk
   * @returns {Promise<arrayBuffer>} - The raw key or the key as a jwk format
   */
 const exportKey = async (key, type = 'raw') => {
   const exportedKey = await window.crypto.subtle.exportKey(type, key)
-  if (type === 'raw') return new Uint8Array(exportedKey)
-  return exportedKey
+  return (type === 'raw') ? new Uint8Array(exportedKey) : exportedKey
 }
 
 /**
@@ -281,6 +280,10 @@ const updatePassphraseKey = async (currentPassPhrase, newPassPhrase, oldMasterKe
  * @returns {Promise<masterKey>} A promise that contains the masterKey
  */
 const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
+  if (!protectedMasterKey.encryptedMasterKey ||
+    !protectedMasterKey.derivationParams) {
+    throw new Error('Missing properties from master key')
+  }
   const { derivationParams, encryptedMasterKey } = protectedMasterKey
   const { salt, iterations, hashAlgo } = derivationParams
   const _salt = typeof (salt) === 'string' ? Buffer.from(salt, ('hex')) : salt
@@ -307,5 +310,7 @@ module.exports = {
   decryptBuffer,
   genEncryptedMasterKey,
   decryptMasterKey,
-  updatePassphraseKey
+  updatePassphraseKey,
+  _genRandomBuffer: genRandomBuffer,
+  _genRandomBufferAsStr: genRandomBufferAsStr
 }
