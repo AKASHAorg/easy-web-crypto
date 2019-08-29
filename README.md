@@ -1,81 +1,175 @@
-# Secure-store
+# Web-crypto
 
-This is a secure, promise-based keyval store that encrypts data stored in IndexedDB.
-
-The symmetric encryption key is derived from the provided passphrase, and then stored in an encrypted form within the provided store name. The encryption key is only used in memory and never revealed.
-
-The IndexedDB wrapper used internally is [idb-keyval](https://github.com/jakearchibald/idb-keyval/).
+This is a wrapper around the Webcrypto API available in modern browsers. It enables faster
+development of applications that require storing encrypted data.
 
 ## Usage
 
-### Initialize
+### genAESKey
 
-The init step takes care of key derivation and setting up the encryption/decription key.
+Generate an AES key for encryption. By default this key can be exported. It supports the
+following parameters: `extractable` (defaults to true), `mode` (defaults to AES-GCM), and
+`keySize` (defaults to 128).
+
 
 ```js
-const Store = require('secure-store')
+const crypto = require('web-crypto')
 
-const store = new Store('some-store-name', 'super-secure-passphrase')
-
-store.init().then(() => {
-  // store is ready
-})
+// genAESKey(extractable, mode = 'AES-GCM', keySize = 128)
+const key = await crypto.genAESKey()
 ```
 
-### set:
+### encrypt:
+
+Encrypt a string|Object using an AES key.
 
 ```js
-store.set('hello', 'world')
+const data = { foo: 'bar' }
+
+// using the key generated above
+const encrypted = await crypto.encrypt(key, data)
 ```
 
-Since this is IDB-backed, you can store anything structured-clonable (numbers, arrays, objects, dates, blobs etc).
-
-All methods return promises:
+### decrypt:
 
 ```js
-store.set('hello', 'world')
-  .then(() => console.log('It worked!'))
-  .catch(err => console.log('It failed!', err))
+const val = await crypto.decrypt(key, encrypted)
+console.log(val) // { foo: 'bar' }
 ```
 
-### get:
+### encryptBuffer:
+
+Encrypt an ArrayBuffer using an AES key.
 
 ```js
-// logs: "world"
-store.get('hello').then(val => console.log(val))
+const buffer = new ArrayBuffer(8)
+
+// using the key generated above
+const encrypted = crypto.encryptBuffer(key, buffer)
 ```
 
-If there is no 'hello' key, then `val` will be `undefined`.
-
-### keys:
+### decryptBuffer:
 
 ```js
-// logs: ["hello", "foo"]
-keys().then(keys => console.log(keys))
+crypto.decryptBuffer(key, encrypted).then(val => console.log(val)) // ArrayBuffer {}
 ```
 
-### del:
+### exportKey:
+
+Export an AES key into a raw|jwk key (defaults to raw) that can be stored.
 
 ```js
-store.del('hello')
+const exported = crypto.exportKey(key)
 ```
 
-### clear:
+### importKey:
+
+Imports an AES key. It accepts the following parameters `key` (exported key), `type` (defaults
+to raw), `mode` (defaults to AES-GCM).
 
 ```js
-store.clear()
+// importKey(key, type = 'raw', mode = 'AES-GCM')
+const key = crypto.importKey(key)
+
+// use this AES key now to encrypt/decrypt as above
+```
+
+
+### genEncryptedMasterKey:
+
+Uses PBKDF2 to derive a Key Encryption Key from a passphrase, in order to generate an encrypted
+AES symmetric key that can be safely stored. It accepts the following parameters: `passPhrase`,
+`salt` (defaults to a random ArrayBuffer(16)), `iterations` (defaults to 10000), `hashAlgo`
+(defaults to SHA-256).
+
+Please make sure you use a sufficiently secure passphrase as well as a minimum of 10000 iterations!
+
+```js
+// genEncryptedMasterKey(passPhrase, salt = genRandomBuffer(16), iterations = 100000, hashAlgo = 'SHA-256')
+const passphrase = 'your super secure passphrase'
+
+const encMasterKey = await crypto.genEncryptedMasterKey(passphrase)
+
+// you can now safely store the encMasterKey for future use
+```
+
+### decryptMasterKey:
+
+Decrypt a master key by deriving the encryption key from the provided passphrase and encrypted
+master key.
+
+```js
+// use the values from genEncryptedMasterKey example
+const key = await crypto.decryptMasterKey(passphrase, encMasterKey)
+
+// use this AES key now to encrypt/decrypt your data
+```
+
+
+### updatePassphraseKey:
+
+Update the derived key encryption key (KEK) based on the new passphrase from user.
+
+Please note that the actual AES key used for encryption does not change, so you can still
+decrypt previously encrypted data. Only the passphrase changed!
+
+```js
+// use the values from genEncryptedMasterKey example + the new passphrase
+const newPassphrase = 'something different from the last passphrase'
+
+// updatePassphraseKey(oldassphrase, newPassphrase, oldEncryptedMasterKey)
+const updatedEncMK = await crypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
+
+// you can now safely store the updatedEncMK for future use
 ```
 
 That's it!
+
+
+## Full example
+
+```js
+const passphrase = 'your super secure passphrase'
+
+// derive a new key from passphrase and generate the master AES key
+const encMasterKey = await crypto.genEncryptedMasterKey(passphrase)
+
+// decrypt the AES key
+let key = await crypto.decryptMasterKey(passphrase, encMasterKey)
+
+// encrypt some data
+const data = { foo: 'bar' }
+
+// using the key generated above
+const encrypted = await crypto.encrypt(key, data)
+
+// decrypt the data
+let val = await crypto.decrypt(key, encrypted)
+console.log(val) // { foo: 'bar' }
+
+// change passphrase
+const newPassphrase = 'something different from the last passphrase'
+
+// updatePassphraseKey(oldassphrase, newPassphrase, oldEncryptedMasterKey)
+const updatedEncMK = await crypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
+
+// decrypt new master key
+key = await crypto.decryptMasterKey(newPassphrase, updatedEncMK)
+
+// decrypt the previous data
+val = await crypto.decrypt(key, encrypted)
+console.log(val) // { foo: 'bar' }
+```
+
 
 ## Installing
 
 ### Via npm
 
 ```sh
-npm install git+https://github.com/deiu/secure-store#master
+npm install git+https://github.com/deiu/web-crypto#master
 ```
 
-### Via `<script>`
+### Via `<script>` tag
 
-* `dist/secure-store.js` can be directly used in browsers.
+* `dist/web-crypto.js` can be directly used in browsers.
