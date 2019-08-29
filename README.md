@@ -13,10 +13,10 @@ following parameters: `extractable` (defaults to true), `mode` (defaults to AES-
 
 
 ```js
-const crypto = require('web-crypto')
+const WebCrypto = require('web-crypto')
 
 // genAESKey(extractable, mode = 'AES-GCM', keySize = 128)
-const key = await crypto.genAESKey()
+const key = await WebCrypto.genAESKey()
 ```
 
 ### encrypt:
@@ -27,13 +27,13 @@ Encrypt a string|Object using an AES key.
 const data = { foo: 'bar' }
 
 // using the key generated above
-const encrypted = await crypto.encrypt(key, data)
+const encrypted = await WebCrypto.encrypt(key, data)
 ```
 
 ### decrypt:
 
 ```js
-const val = await crypto.decrypt(key, encrypted)
+const val = await WebCrypto.decrypt(key, encrypted)
 console.log(val) // { foo: 'bar' }
 ```
 
@@ -45,13 +45,13 @@ Encrypt an ArrayBuffer using an AES key.
 const buffer = new ArrayBuffer(8)
 
 // using the key generated above
-const encrypted = crypto.encryptBuffer(key, buffer)
+const encrypted = WebCrypto.encryptBuffer(key, buffer)
 ```
 
 ### decryptBuffer:
 
 ```js
-crypto.decryptBuffer(key, encrypted).then(val => console.log(val)) // ArrayBuffer {}
+WebCrypto.decryptBuffer(key, encrypted).then(val => console.log(val)) // ArrayBuffer {}
 ```
 
 ### exportKey:
@@ -59,7 +59,7 @@ crypto.decryptBuffer(key, encrypted).then(val => console.log(val)) // ArrayBuffe
 Export an AES key into a raw|jwk key (defaults to raw) that can be stored.
 
 ```js
-const exported = crypto.exportKey(key)
+const exported = WebCrypto.exportKey(key)
 ```
 
 ### importKey:
@@ -69,7 +69,7 @@ to raw), `mode` (defaults to AES-GCM).
 
 ```js
 // importKey(key, type = 'raw', mode = 'AES-GCM')
-const key = crypto.importKey(key)
+const key = WebCrypto.importKey(key)
 
 // use this AES key now to encrypt/decrypt as above
 ```
@@ -88,7 +88,7 @@ Please make sure you use a sufficiently secure passphrase as well as a minimum o
 // genEncryptedMasterKey(passPhrase, salt = genRandomBuffer(16), iterations = 100000, hashAlgo = 'SHA-256')
 const passphrase = 'your super secure passphrase'
 
-const encMasterKey = await crypto.genEncryptedMasterKey(passphrase)
+const encMasterKey = await WebCrypto.genEncryptedMasterKey(passphrase)
 
 // you can now safely store the encMasterKey for future use
 ```
@@ -100,7 +100,7 @@ master key.
 
 ```js
 // use the values from genEncryptedMasterKey example
-const key = await crypto.decryptMasterKey(passphrase, encMasterKey)
+const key = await WebCrypto.decryptMasterKey(passphrase, encMasterKey)
 
 // use this AES key now to encrypt/decrypt your data
 ```
@@ -118,7 +118,7 @@ decrypt previously encrypted data. Only the passphrase changed!
 const newPassphrase = 'something different from the last passphrase'
 
 // updatePassphraseKey(oldassphrase, newPassphrase, oldEncryptedMasterKey)
-const updatedEncMK = await crypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
+const updatedEncMK = await WebCrypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
 
 // you can now safely store the updatedEncMK for future use
 ```
@@ -132,32 +132,32 @@ That's it!
 const passphrase = 'your super secure passphrase'
 
 // derive a new key from passphrase and generate the master AES key
-const encMasterKey = await crypto.genEncryptedMasterKey(passphrase)
+const encMasterKey = await WebCrypto.genEncryptedMasterKey(passphrase)
 
 // decrypt the AES key
-let key = await crypto.decryptMasterKey(passphrase, encMasterKey)
+let key = await WebCrypto.decryptMasterKey(passphrase, encMasterKey)
 
 // encrypt some data
 const data = { foo: 'bar' }
 
 // using the key generated above
-const encrypted = await crypto.encrypt(key, data)
+const encrypted = await WebCrypto.encrypt(key, data)
 
 // decrypt the data
-let val = await crypto.decrypt(key, encrypted)
+let val = await WebCrypto.decrypt(key, encrypted)
 console.log(val) // { foo: 'bar' }
 
 // change passphrase
 const newPassphrase = 'something different from the last passphrase'
 
 // updatePassphraseKey(oldassphrase, newPassphrase, oldEncryptedMasterKey)
-const updatedEncMK = await crypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
+const updatedEncMK = await WebCrypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
 
 // decrypt new master key
-key = await crypto.decryptMasterKey(newPassphrase, updatedEncMK)
+key = await WebCrypto.decryptMasterKey(newPassphrase, updatedEncMK)
 
 // decrypt the previous data
-val = await crypto.decrypt(key, encrypted)
+val = await WebCrypto.decrypt(key, encrypted)
 console.log(val) // { foo: 'bar' }
 ```
 
@@ -172,4 +172,4 @@ npm install git+https://github.com/deiu/web-crypto#master
 
 ### Via `<script>` tag
 
-* `dist/web-crypto.js` can be directly used in browsers.
+* `dist/web-WebCrypto.js` can be directly used in browsers.
