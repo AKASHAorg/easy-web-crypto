@@ -7,10 +7,14 @@
     "main": "dist/web-crypto.js",
     "module": "src/index.js",
     "scripts": {
-        "build": "webpack -p"
+        "build": "webpack -p",
+        "test": "npm run build && mocha-headless-chrome -f ./test/index.html -a no-sandbox -a disable-setuid-sandbox"
     },
     "devDependencies": {
         "babel": "^6.23.0",
+        "chai": "^4.2.0",
+        "mocha": "^6.2.0",
+        "mocha-headless-chrome": "^2.0.3",
         "standard": "^13.1.0",
         "webpack": "^4.39.2",
         "webpack-cli": "^3.3.6"
