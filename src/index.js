@@ -244,6 +244,34 @@ const genEncryptedMasterKey = async (passPhrase, salt, iterations, hashAlgo) => 
 }
 
 /**
+ * Update the derived encryption key (KEK) based on the new passphrase from user, while retaining
+ * the symmetric key that encrypts data at rest
+ *
+ * @param {string | arrayBuffer} currentPassPhrase The current (old) passphrase that is used to derive the key
+ * @param {string | arrayBuffer} newPassPhrase The new passphrase that will be used to derive the key
+ * @param {oldMasterKey} oldMasterKey - The old object returned by genEncryptedMasterKey for the old passphrase
+ * @param {arrayBuffer} [salt] The salt
+ * @param {Number} [iterations] The iterations number
+ * @param {string} [hashAlgo] The hash function used for derivation and final hash computing
+ * @returns {Promise<protectedMasterKey>}
+ */
+const updatePassphraseKey = async (currentPassPhrase, newPassPhrase, oldMasterKey, salt, iterations, hashAlgo) => {
+  const masterKey = await decryptMasterKey(currentPassPhrase, oldMasterKey)
+  // derive a new key encryption key from newPassPhrase
+  const keyEncryptionKey = await deriveKeyFromPassphrase(newPassPhrase, salt, iterations, hashAlgo)
+
+  // enconde existing masterKey as a hex string since it's a buffer
+  const toBeEncryptedMasterKey = Buffer.from(await exportKey(masterKey)).toString('hex')
+
+  const encryptedMasterKey = await encrypt(keyEncryptionKey.key, toBeEncryptedMasterKey)
+
+  return {
+    derivationParams: keyEncryptionKey.derivationParams,
+    encryptedMasterKey
+  }
+}
+
+/**
  * Decrypt a master key by deriving the encryption key from the
  * provided passphrase and encrypted master key.
  *
@@ -256,40 +284,16 @@ const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
   const { derivationParams, encryptedMasterKey } = protectedMasterKey
   const { salt, iterations, hashAlgo } = derivationParams
   const _salt = typeof (salt) === 'string' ? Buffer.from(salt, ('hex')) : salt
+  const derivedKey = await deriveBits(passPhrase, _salt, iterations, hashAlgo)
+  const keyEncryptionKey = await importKey(derivedKey)
   try {
-    const derivedKey = await deriveBits(passPhrase, _salt, iterations, hashAlgo)
-    const keyEncryptionKey = await importKey(derivedKey)
     const decryptedMasterKeyHex = await decrypt(keyEncryptionKey, encryptedMasterKey)
+    // return decryptedMasterKeyHex
     const parsedKey = Buffer.from(decryptedMasterKeyHex, 'hex')
     return window.crypto.subtle.importKey('raw', parsedKey, { name: 'AES-GCM' }
       , true, ['encrypt', 'decrypt'])
   } catch (error) {
     throw new Error('Wrong passphrase')
-  }
-}
-
-/**
- * Update the derived encryption key (KEK) based on the new passphrase from user, while retaining
- * the symmetric key that encrypts data at rest
- *
- * @param {string | arrayBuffer} currentPassPhrase The current (old) passphrase that is used to derive the key
- * @param {string | arrayBuffer} newPassPhrase The new passphrase that will be used to derive the key
- * @param {oldMasterKey} oldMasterKey - The old object returned by genEncryptedMasterKey for the old passphrase
- * @returns {Promise<protectedMasterKey>}
- */
-const updatePassphraseKey = async (currentPassPhrase, newPassPhrase, oldMasterKey) => {
-  const masterKey = await decryptMasterKey(currentPassPhrase, oldMasterKey)
-  // derive a new key encryption key from newPassPhrase
-  const keyEncryptionKey = await deriveKeyFromPassphrase(newPassPhrase)
-
-  // econde existing masterKey as a hex string since it's a buffer
-  const toBeEncryptedMasterKey = masterKey.toString('hex')
-
-  const encryptedMasterKey = await encrypt(keyEncryptionKey.key, toBeEncryptedMasterKey)
-
-  return {
-    derivationParams: keyEncryptionKey.derivationParams,
-    encryptedMasterKey
   }
 }
 
