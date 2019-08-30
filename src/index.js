@@ -300,6 +300,24 @@ const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
   }
 }
 
+/**
+ * Hash of a string or arrayBuffer
+ *
+ * @param {string | arrayBuffer} data The message
+ * @param {string} [format] The encoding format ('hex' by default, could be 'base64')
+ * @param {string} [type] The hash name (SHA-256 by default)
+ * @returns {Promise<String>}  A promise that contains the hash as a String encoded with encodingFormat
+ */
+const hash = async (data, format = 'hex', type = 'SHA-256') => {
+  const digest = await window.crypto.subtle.digest(
+    {
+      name: type
+    },
+    (typeof data === 'string') ? Buffer.from(data) : data
+  )
+  return Buffer.from(digest).toString(format)
+}
+
 module.exports = {
   genAESKey,
   importKey,
@@ -311,6 +329,7 @@ module.exports = {
   genEncryptedMasterKey,
   decryptMasterKey,
   updatePassphraseKey,
+  hash,
   _genRandomBuffer: genRandomBuffer,
   _genRandomBufferAsStr: genRandomBufferAsStr
 }

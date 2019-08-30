@@ -10,7 +10,7 @@ development of applications that require storing encrypted data.
 ### genAESKey
 
 Generate an AES key for encryption. By default this key can be exported. It supports the
-following parameters: `extractable` (defaults to true), `mode` (defaults to AES-GCM), and
+following optional parameters: `extractable` (defaults to true), `mode` (defaults to AES-GCM), and
 `keySize` (defaults to 128).
 
 
@@ -66,7 +66,7 @@ const exported = WebCrypto.exportKey(key)
 
 ### importKey:
 
-Imports an AES key. It accepts the following parameters `key` (exported key), `type` (defaults
+Imports an AES key. It accepts the following optional parameters: `type` (defaults
 to raw), `mode` (defaults to AES-GCM).
 
 ```js
@@ -80,7 +80,7 @@ const key = WebCrypto.importKey(key)
 ### genEncryptedMasterKey:
 
 Uses PBKDF2 to derive a Key Encryption Key from a passphrase, in order to generate an encrypted
-AES symmetric key that can be safely stored. It accepts the following parameters: `passPhrase`,
+AES symmetric key that can be safely stored. It accepts the following optional parameters:
 `salt` (defaults to a random ArrayBuffer(16)), `iterations` (defaults to 10000), `hashAlgo`
 (defaults to SHA-256).
 
@@ -123,6 +123,19 @@ const newPassphrase = 'something different from the last passphrase'
 const updatedEncMK = await WebCrypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
 
 // you can now safely store the updatedEncMK for future use
+```
+
+### hash:
+
+Generate the hash of a string or ArrayBuffer. It accepts the following optional parameters:
+`outputFormat` (defaults to hex), and `type` (defaults to SHA-256 but supports others too).
+
+```js
+// hash(data, outputFormat = 'hex', type = 'SHA-256')
+const hashed = await WebCrypto.hash('abc123')
+
+console.log(hashed)
+// 6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090
 ```
 
 That's it!

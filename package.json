@@ -8,6 +8,7 @@
     "module": "src/index.js",
     "scripts": {
         "build": "webpack -p",
+        "test-only": "mocha-headless-chrome -f ./test/index.html -a no-sandbox -a disable-setuid-sandbox",
         "test": "npm run build && mocha-headless-chrome -f ./test/index.html -a no-sandbox -a disable-setuid-sandbox"
     },
     "devDependencies": {

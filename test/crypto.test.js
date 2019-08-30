@@ -7,12 +7,12 @@ describe('Web crypto', function () {
   context('Generating a random buffer (for iv)', () => {
     it('Should generate a random buffer without length parameter', () => {
       const iv1 = WebCrypto._genRandomBuffer()
-      chai.assert.lengthOf(iv1, 16, 'Default length is 16')
+      chai.assert.lengthOf(iv1, 16)
     })
 
     it('Should generate a random buffer with a specific length parameter', () => {
       const iv2 = WebCrypto._genRandomBuffer(8)
-      chai.assert.lengthOf(iv2, 8, 'Array length is not 8')
+      chai.assert.lengthOf(iv2, 8)
     })
     it('Should generate a random buffer with a specific length parameter in hex format', () => {
       const buf1 = WebCrypto._genRandomBufferAsStr(8, 'hex')
@@ -25,6 +25,40 @@ describe('Web crypto', function () {
     it('Should reject if a wrong encoding format is given', () => {
       const toCall = () => WebCrypto._genRandomBufferAsStr(8, 'base777')
       chai.expect(toCall).to.throw().with.property('message', 'Invalid encoding')
+    })
+  })
+
+  context('Hashing functions', () => {
+    const toHash = 'abc123'
+    it('Should generate a SHA-256 hash from a string using no parameters (default)', async () => {
+      const hashed = await WebCrypto.hash(toHash)
+      chai.assert.lengthOf(hashed, 64)
+    })
+
+    it('Should generate a SHA-256 hash from an ArrayBuffer using no parameters (default)', async () => {
+      const buffer = new ArrayBuffer(16)
+      const hashed = await WebCrypto.hash(buffer)
+      chai.assert.lengthOf(hashed, 64)
+    })
+
+    it('Should generate a SHA-256 hash when specifying hex format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'hex')
+      chai.assert.lengthOf(hashed, 64)
+    })
+
+    it('Should generate a SHA-1 hash when specifying hex format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'hex', 'SHA-1')
+      chai.assert.lengthOf(hashed, 40)
+    })
+
+    it('Should generate a SHA-256 hash when specifying base64 format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'base64')
+      chai.assert.lengthOf(hashed, 44)
+    })
+
+    it('Should generate a SHA-1 hash when specifying base64 format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'base64', 'SHA-1')
+      chai.assert.lengthOf(hashed, 28)
     })
   })
 
