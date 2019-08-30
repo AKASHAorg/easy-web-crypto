@@ -41,24 +41,44 @@ describe('Web crypto', function () {
       chai.assert.lengthOf(hashed, 64)
     })
 
-    it('Should generate a SHA-256 hash when specifying hex format', async () => {
-      const hashed = await WebCrypto.hash(toHash, 'hex')
-      chai.assert.lengthOf(hashed, 64)
-    })
-
     it('Should generate a SHA-1 hash when specifying hex format', async () => {
       const hashed = await WebCrypto.hash(toHash, 'hex', 'SHA-1')
       chai.assert.lengthOf(hashed, 40)
     })
 
-    it('Should generate a SHA-256 hash when specifying base64 format', async () => {
-      const hashed = await WebCrypto.hash(toHash, 'base64')
-      chai.assert.lengthOf(hashed, 44)
+    it('Should generate a SHA-256 hash when specifying hex format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'hex')
+      chai.assert.lengthOf(hashed, 64)
+    })
+
+    it('Should generate a SHA-384 hash when specifying hex format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'hex', 'SHA-384')
+      chai.assert.lengthOf(hashed, 96)
+    })
+
+    it('Should generate a SHA-512 hash when specifying hex format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'hex', 'SHA-512')
+      chai.assert.lengthOf(hashed, 128)
     })
 
     it('Should generate a SHA-1 hash when specifying base64 format', async () => {
       const hashed = await WebCrypto.hash(toHash, 'base64', 'SHA-1')
       chai.assert.lengthOf(hashed, 28)
+    })
+
+    it('Should generate a SHA-256 hash when specifying base64 format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'base64', 'SHA-256')
+      chai.assert.lengthOf(hashed, 44)
+    })
+
+    it('Should generate a SHA-384 hash when specifying base64 format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'base64', 'SHA-384')
+      chai.assert.lengthOf(hashed, 64)
+    })
+
+    it('Should generate a SHA-256 hash when specifying base64 format', async () => {
+      const hashed = await WebCrypto.hash(toHash, 'base64', 'SHA-512')
+      chai.assert.lengthOf(hashed, 88)
     })
   })
 

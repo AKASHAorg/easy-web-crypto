@@ -128,10 +128,11 @@ const updatedEncMK = await WebCrypto.updatePassphraseKey(passphrase, newPassphra
 ### hash:
 
 Generate the hash of a string or ArrayBuffer. It accepts the following optional parameters:
-`outputFormat` (defaults to hex), and `type` (defaults to SHA-256 but supports others too).
+`outputFormat` (defaults to hex), and `name` (defaults to SHA-256 but also supports SHA-1
+(don't use this in cryptographic applications), SHA-384, and SHA-512 algorithms).
 
 ```js
-// hash(data, outputFormat = 'hex', type = 'SHA-256')
+// hash(data, outputFormat = 'hex', name = 'SHA-256')
 const hashed = await WebCrypto.hash('abc123')
 
 console.log(hashed)
