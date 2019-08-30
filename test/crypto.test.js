@@ -30,13 +30,13 @@ describe('Web crypto', function () {
 
   context('Generating a random ID', () => {
     it('Should generate a random identifier without providing the length parameter', () => {
-      const id = WebCrypto.genId()
-      chai.assert.lengthOf(id, 16)
-    })
-
-    it('Should generate a random identifier with a specific length parameter of 32', () => {
       const id = WebCrypto.genId(32)
       chai.assert.lengthOf(id, 32)
+    })
+
+    it('Should generate a random identifier with a specific length parameter of 16', () => {
+      const id = WebCrypto.genId(16)
+      chai.assert.lengthOf(id, 16)
     })
   })
 

@@ -38,7 +38,7 @@ const checkEncodingFormat = (format) => {
  * @param {integer} [len] The string length of the new ID
  * @returns {string} The new ID
  */
-const genId = (len = 16) => {
+const genId = (len = 32) => {
   // 2 bytes for each char
   return genRandomBufferAsStr(Math.floor(len / 2))
 }
