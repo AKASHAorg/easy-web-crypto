@@ -5,7 +5,7 @@ const WebCrypto = window.WebCrypto
 
 describe('Web crypto', function () {
   context('Generating a random buffer (for iv)', () => {
-    it('Should generate a random buffer without length parameter', () => {
+    it('Should generate a random buffer without providing the length parameter', () => {
       const iv1 = WebCrypto._genRandomBuffer()
       chai.assert.lengthOf(iv1, 16)
     })
@@ -25,6 +25,18 @@ describe('Web crypto', function () {
     it('Should reject if a wrong encoding format is given', () => {
       const toCall = () => WebCrypto._genRandomBufferAsStr(8, 'base777')
       chai.expect(toCall).to.throw().with.property('message', 'Invalid encoding')
+    })
+  })
+
+  context('Generating a random ID', () => {
+    it('Should generate a random identifier without providing the length parameter', () => {
+      const id = WebCrypto.genId()
+      chai.assert.lengthOf(id, 16)
+    })
+
+    it('Should generate a random identifier with a specific length parameter of 32', () => {
+      const id = WebCrypto.genId(32)
+      chai.assert.lengthOf(id, 32)
     })
   })
 

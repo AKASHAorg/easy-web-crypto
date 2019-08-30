@@ -139,6 +139,17 @@ console.log(hashed)
 // 6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090
 ```
 
+### genId:
+
+Generate a random hexadecimal ID based on the provided length. Defaults to a length of 16.
+
+```js
+const randomId = WebCrypto.genId(32)
+
+console.log(randomId) // a6d2a143edb8b521645bf5d39c29e401
+```
+
+
 That's it!
 
 

@@ -1,10 +1,69 @@
 /**
- * Originally from https://github.com/QwantResearch/masq-common/ with modifications
+ * Originally from https://github.com/QwantResearch/masq-common/ with improvements
  * by Andrei Sambra
  */
 
+const checkCryptokey = (key) => {
+  if (!key.type || key.type !== 'secret') {
+    throw new Error('Invalid key type')
+  }
+}
+
+const genRandomBuffer = (len = 16) => {
+  const values = window.crypto.getRandomValues(new Uint8Array(len))
+  return Buffer.from(values)
+}
+
+const genRandomBufferAsStr = (len = 16, encodingFormat = 'hex') => {
+  if (encodingFormat) {
+    checkEncodingFormat(encodingFormat)
+  }
+  const buf = genRandomBuffer(len)
+  return buf.toString(encodingFormat)
+}
+
+const checkPassphrase = (str) => {
+  if (typeof str !== 'string' || str === '') {
+    throw new Error(`Not a valid value`)
+  }
+}
+
+const checkEncodingFormat = (format) => {
+  if (format !== 'hex' && format !== 'base64') throw new Error('Invalid encoding')
+}
+
+/**
+ * Generate a random hexadecimal ID of a given length
+ *
+ * @param {integer} [len] The string length of the new ID
+ * @returns {string} The new ID
+ */
+const genId = (len = 16) => {
+  // 2 bytes for each char
+  return genRandomBufferAsStr(Math.floor(len / 2))
+}
+
+/**
+ * Generate the hash of a string or ArrayBuffer
+ *
+ * @param {string | arrayBuffer} data The message
+ * @param {string} [format] The encoding format ('hex' by default, can also be 'base64')
+ * @param {string} [name] The hashing algorithm (SHA-256 by default)
+ * @returns {Promise<String>}  A promise that contains the hash as a String encoded with encodingFormat
+ */
+const hash = async (data, format = 'hex', name = 'SHA-256') => {
+  const digest = await window.crypto.subtle.digest(
+    {
+      name
+    },
+    (typeof data === 'string') ? Buffer.from(data) : data
+  )
+  return Buffer.from(digest).toString(format)
+}
+
 /**
    * Generate an AES key based on the cipher mode and keysize
+   *
    * @param {boolean} [extractable] - Specify if the generated key is extractable
    * @param {string} [mode] - The aes mode of the generated key
    * @param {Number} [keySize] - Specify if the generated key is extractable
@@ -75,17 +134,6 @@ const decryptBuffer = async (key, data, cipherContext) => {
   }
 }
 
-const checkCryptokey = (key) => {
-  if (!key.type || key.type !== 'secret') {
-    throw new Error('Invalid key type')
-  }
-}
-
-const genRandomBuffer = (len = 16) => {
-  const values = window.crypto.getRandomValues(new Uint8Array(len))
-  return Buffer.from(values)
-}
-
 /**
  * Encrypt data
  *
@@ -141,24 +189,6 @@ const decrypt = async (key, ciphertext, format = 'hex') => {
   } catch (error) {
     throw new Error('Unable to decrypt data')
   }
-}
-
-const checkPassphrase = (str) => {
-  if (typeof str !== 'string' || str === '') {
-    throw new Error(`Not a valid value`)
-  }
-}
-
-const checkEncodingFormat = (format) => {
-  if (format !== 'hex' && format !== 'base64') throw new Error('Invalid encoding')
-}
-
-const genRandomBufferAsStr = (len = 16, encodingFormat = 'hex') => {
-  if (encodingFormat) {
-    checkEncodingFormat(encodingFormat)
-  }
-  const buf = genRandomBuffer(len)
-  return buf.toString(encodingFormat)
 }
 
 /**
@@ -300,25 +330,9 @@ const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
   }
 }
 
-/**
- * Hash of a string or arrayBuffer
- *
- * @param {string | arrayBuffer} data The message
- * @param {string} [format] The encoding format ('hex' by default, could be 'base64')
- * @param {string} [name] The hashing algorithm (SHA-256 by default)
- * @returns {Promise<String>}  A promise that contains the hash as a String encoded with encodingFormat
- */
-const hash = async (data, format = 'hex', name = 'SHA-256') => {
-  const digest = await window.crypto.subtle.digest(
-    {
-      name
-    },
-    (typeof data === 'string') ? Buffer.from(data) : data
-  )
-  return Buffer.from(digest).toString(format)
-}
-
 module.exports = {
+  genId,
+  hash,
   genAESKey,
   importKey,
   exportKey,
@@ -329,7 +343,6 @@ module.exports = {
   genEncryptedMasterKey,
   decryptMasterKey,
   updatePassphraseKey,
-  hash,
   _genRandomBuffer: genRandomBuffer,
   _genRandomBufferAsStr: genRandomBufferAsStr
 }
