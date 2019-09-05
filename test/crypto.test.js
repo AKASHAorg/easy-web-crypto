@@ -22,9 +22,14 @@ describe('Web crypto', function () {
       const buf = WebCrypto._genRandomBufferAsStr(8, 'base64')
       chai.assert.lengthOf(buf, 12)
     })
-    it('Should reject if a wrong encoding format is given', () => {
-      const toCall = () => WebCrypto._genRandomBufferAsStr(8, 'base777')
-      chai.expect(toCall).to.throw().with.property('message', 'Invalid encoding')
+    it('Should reject if a wrong encoding format is given', async () => {
+      let err
+      try {
+        await WebCrypto._genRandomBufferAsStr(8, 'base777')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.equal(err.message, 'Invalid encoding')
     })
   })
 
@@ -94,15 +99,242 @@ describe('Web crypto', function () {
     })
   })
 
-  context('AES operations and key export/import', () => {
-    it('Should reject if the key is not a CryptoKey', async () => {
-      let err = { message: '_ERROR_NOT_THROWN_' }
+  context('ECDA keys', () => {
+    it('Should fail to generate a key pair with wrong parameters', async () => {
+      let err
+      try {
+        await WebCrypto.genKeyPair('foo', 'baz')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.equal(err.message, 'EcKeyGenParams: Unrecognized namedCurve')
+
+      try {
+        await WebCrypto.genKeyPair(undefined, 'P-256')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.equal(err.message, 'EcKeyGenParams: Unrecognized namedCurve')
+    })
+
+    it('Should generate an extractable key pair with default parameters', async () => {
+      let err
+      let keypair
+      try {
+        keypair = await WebCrypto.genKeyPair()
+      } catch (error) {
+        err = error
+      }
+      chai.assert.isUndefined(err)
+      chai.assert.isDefined(keypair)
+      chai.assert.isTrue(keypair.publicKey.extractable)
+      chai.assert.isTrue(keypair.privateKey.extractable)
+    })
+
+    it('Should generate a key pair with unextractable private key using default parameters', async () => {
+      let err
+      let keypair
+      try {
+        keypair = await WebCrypto.genKeyPair(false)
+      } catch (error) {
+        err = error
+      }
+      chai.assert.isUndefined(err)
+      chai.assert.isDefined(keypair)
+      chai.assert.isTrue(keypair.publicKey.extractable)
+      chai.assert.isFalse(keypair.privateKey.extractable)
+    })
+
+    it('Should fail to export a public key with wrong parameters', async () => {
+      let err
+      try {
+        await WebCrypto.exportPublicKey()
+      } catch (error) {
+        err = error
+      }
+      chai.assert.exists(err.message, 'Failed to execute')
+
+      err = undefined
+      try {
+        await WebCrypto.exportPublicKey('foo')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.isDefined(err.message, 'Failed to execute')
+    })
+
+    it('Should export a public key in base64 format by default', async () => {
+      const keys = await WebCrypto.genKeyPair()
+      const exported = await WebCrypto.exportPublicKey(keys.publicKey)
+      chai.assert.isDefined(exported)
+      chai.assert.typeOf(exported, 'string')
+    })
+
+    it('Should export a public key in raw format', async () => {
+      const keys = await WebCrypto.genKeyPair()
+      const exported = await WebCrypto.exportPublicKey(keys.publicKey, 'raw')
+
+      chai.assert.isDefined(exported)
+      chai.assert.typeOf(exported, 'Uint8Array')
+    })
+
+    it('Should fail to import a public key with wrong parameters', async () => {
+      let err
+      try {
+        await WebCrypto.importPublicKey('foo', 'baz')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.equal(err.message, 'EcKeyImportParams: Unrecognized namedCurve')
+
+      try {
+        await WebCrypto.importPublicKey(undefined, 'P-256')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.exists(err.message, 'First argument must be a string')
+    })
+
+    it('Should import a public key for curves P-256, P-384, P-521', async () => {
+      const curves = ['P-256', 'P-384', 'P-521']
+      // default params
+      const keys = await WebCrypto.genKeyPair()
+      const exported = await WebCrypto.exportPublicKey(keys.publicKey)
+      const imported = await WebCrypto.importPublicKey(exported)
+      chai.assert.typeOf(imported, 'CryptoKey')
+
+      curves.forEach(async curve => {
+        let err
+        try {
+          const keys = await WebCrypto.genKeyPair(true, curve)
+          const exported = await WebCrypto.exportPublicKey(keys.publicKey)
+          const imported = await WebCrypto.importPublicKey(exported, curve)
+          chai.assert.typeOf(imported, 'CryptoKey')
+        } catch (error) {
+          err = error
+        }
+        chai.assert.isUndefined(err)
+      })
+    })
+
+    it('Should fail to export a private key with wrong parameters', async () => {
+      let err
+      try {
+        await WebCrypto.exportPrivateKey()
+      } catch (error) {
+        err = error
+      }
+      chai.assert.exists(err.message, 'Failed to execute')
+
+      err = undefined
+      try {
+        await WebCrypto.exportPrivateKey('foo')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.isDefined(err.message, 'Failed to execute')
+    })
+
+    it('Should export a public key to base64 format by default', async () => {
+      const keys = await WebCrypto.genKeyPair()
+      const exported = await WebCrypto.exportPrivateKey(keys.privateKey)
+
+      chai.assert.typeOf(exported, 'string')
+    })
+
+    it('Should export a public key to raw format', async () => {
+      const keys = await WebCrypto.genKeyPair()
+      const exported = await WebCrypto.exportPrivateKey(keys.privateKey, 'raw')
+
+      chai.assert.typeOf(exported, 'Uint8Array')
+    })
+
+    it('Should fail to import a private key with wrong parameters', async () => {
+      let err
+      try {
+        await WebCrypto.importPrivateKey('foo', 'baz')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.equal(err.message, 'EcKeyImportParams: Unrecognized namedCurve')
+
+      try {
+        await WebCrypto.importPrivateKey(undefined, 'P-256')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.exists(err.message, 'First argument must be a string')
+    })
+
+    it('Should import a private key for curves P-256, P-384, P-521', async () => {
+      const curves = ['P-256', 'P-384', 'P-521']
+      // default params
+      const keys = await WebCrypto.genKeyPair()
+      const exported = await WebCrypto.exportPrivateKey(keys.privateKey)
+      const imported = await WebCrypto.importPrivateKey(exported)
+      chai.assert.typeOf(imported, 'CryptoKey')
+
+      curves.forEach(async curve => {
+        let err
+        try {
+          const keys = await WebCrypto.genKeyPair(true, curve)
+          const exported = await WebCrypto.exportPrivateKey(keys.privateKey)
+          const imported = await WebCrypto.importPrivateKey(exported, curve)
+          chai.assert.typeOf(imported, 'CryptoKey')
+        } catch (error) {
+          err = error
+        }
+        chai.assert.isUndefined(err)
+      })
+    })
+
+    it('Should fail to sign with wrong parameters', async () => {
+      const keys = await WebCrypto.genKeyPair()
+
+      let err
+      try {
+        await WebCrypto.sign()
+      } catch (error) {
+        err = error
+      }
+      chai.assert.exists(err.message, 'First argument must be a string')
+
+      try {
+        await WebCrypto.sign(keys.privateKey, 'foo', 'bar')
+      } catch (error) {
+        err = error
+      }
+      chai.assert.exists(err.message, 'First argument must be a string')
+    })
+
+    it('Should sign/verify data using base64 as default format for signatures', async () => {
+      const data = { foo: 'bar' }
+      const keys = await WebCrypto.genKeyPair()
+
+      const sig = await WebCrypto.sign(keys.privateKey, data)
+      const valid = await WebCrypto.verify(keys.publicKey, data, sig)
+      chai.assert.isTrue(valid)
+    })
+
+    it('Should sign/verify data using raw format for signatures', async () => {
+      const data = { foo: 'bar' }
+      const keys = await WebCrypto.genKeyPair()
+
+      const sig = await WebCrypto.sign(keys.privateKey, data, 'raw')
+      const valid = await WebCrypto.verify(keys.publicKey, data, sig, 'raw')
+      chai.assert.isTrue(valid)
+    })
+  })
+
+  context('AES keys', () => {
+    it('Should reject if the key is not of type CryptoKey', async () => {
+      let err
       try {
         await WebCrypto.encrypt([2, 3], { data: 'hello' })
       } catch (error) {
         err = error
       }
-      chai.assert.equal(err.message, 'Invalid key type', 'Reject if given key is not a CryptoKey')
+      chai.assert.equal(err.message, 'Invalid key type')
     })
 
     it('Should fail to decrypt a message with default parameters (wrong iv)', async () => {
@@ -117,8 +349,7 @@ describe('Web crypto', function () {
       } catch (error) {
         err = error
       }
-
-      chai.assert.equal(err.message, 'Unable to decrypt data', 'Reject if wrong iv')
+      chai.assert.equal(err.message, 'Unable to decrypt data')
     })
 
     it('Should fail to decrypt a message with default parameters (wrong key)', async () => {
@@ -126,46 +357,45 @@ describe('Web crypto', function () {
       const key = await WebCrypto.genAESKey()
       const ciphertext = await WebCrypto.encrypt(key, message)
 
-      let err = { message: '_ERROR_NOT_THROWN_' }
+      let err
       try {
         const key2 = await WebCrypto.genAESKey()
         await WebCrypto.decrypt(key2, ciphertext)
       } catch (error) {
         err = error
       }
-
-      chai.assert.equal(err.message, 'Unable to decrypt data', 'Reject if wrong key')
+      chai.assert.equal(err.message, 'Unable to decrypt data')
     })
 
     it('Should generate an extractable AES key cryptokey with default settings (AES-GCM 128 bits)', async () => {
       const key = await WebCrypto.genAESKey()
       chai.assert.equal(key.type, 'secret', 'Secret key')
-      chai.assert.isTrue(key.extractable, 'Key is extractable by default to allow export or wrap')
+      chai.assert.isTrue(key.extractable)
     })
 
     it('Should generate and export (in raw format by default) an extractable AES key cryptokey with default settings (AES-GCM 128 bits)', async () => {
       const key = await WebCrypto.genAESKey()
       const rawKey = await WebCrypto.exportKey(key)
-      chai.assert.lengthOf(rawKey, 16, 'Default size is 128 bits')
+      chai.assert.lengthOf(rawKey, 16)
     })
 
     it('Should generate and export (in raw format by default) an extractable AES key cryptokey with default settings (AES-GCM 256 bits)', async () => {
       const key = await WebCrypto.genAESKey(true, 'AES-GCM', 256)
       const rawKey = await WebCrypto.exportKey(key)
-      chai.assert.lengthOf(rawKey, 32, 'Default size is 256 bits')
+      chai.assert.lengthOf(rawKey, 32)
     })
 
     it('Should generate and export in raw format an extractable AES key cryptokey with default settings (AES-GCM 128 bits)', async () => {
       const key = await WebCrypto.genAESKey()
       const rawKey = await WebCrypto.exportKey(key, 'raw')
-      chai.assert.lengthOf(rawKey, 16, 'Default size is 128 bits')
+      chai.assert.lengthOf(rawKey, 16)
     })
 
     it('Should encrypt a message and encode with default format (hex)', async () => {
       const message = { data: 'hello' }
       const key = await WebCrypto.genAESKey()
       const ciphertext = await WebCrypto.encrypt(key, message)
-      chai.assert.lengthOf(ciphertext.iv, 24, 'Default size is 24 for hex format (96 bits iv), specific for AES-GCM')
+      chai.assert.lengthOf(ciphertext.iv, 24)
     })
 
     it('Should encrypt a message and encode with base64 format ', async () => {
@@ -173,7 +403,7 @@ describe('Web crypto', function () {
       const key = await WebCrypto.genAESKey()
       const ciphertext = await WebCrypto.encrypt(key, message, 'base64')
 
-      chai.assert.equal(ciphertext.ciphertext.slice(-1), '=', 'Last character of base64 is always =')
+      chai.assert.equal(ciphertext.ciphertext.slice(-1), '=')
     })
 
     it('Should encrypt and decrypt a message with default parameters', async () => {
@@ -181,7 +411,7 @@ describe('Web crypto', function () {
       const key = await WebCrypto.genAESKey()
       const ciphertext = await WebCrypto.encrypt(key, message)
       const plaintext = await WebCrypto.decrypt(key, ciphertext)
-      chai.assert.deepEqual(plaintext, message, 'Must get the initial message after decryption')
+      chai.assert.deepEqual(plaintext, message)
     })
 
     it('Should generate/encrypt/export/import/decrypt with raw format for key export', async () => {
@@ -191,7 +421,7 @@ describe('Web crypto', function () {
       const rawKey = await WebCrypto.exportKey(key)
       const cryptoKey = await WebCrypto.importKey(rawKey)
       const plaintext = await WebCrypto.decrypt(cryptoKey, ciphertext)
-      chai.assert.deepEqual(plaintext, message, 'Must get the initial message after decryption')
+      chai.assert.deepEqual(plaintext, message)
     })
 
     it('Should generate/encrypt/export/import/decrypt with jwk format for key export', async () => {
@@ -201,7 +431,7 @@ describe('Web crypto', function () {
       const jwk = await WebCrypto.exportKey(key, 'jwk')
       const cryptoKey = await WebCrypto.importKey(jwk, 'jwk')
       const plaintext = await WebCrypto.decrypt(cryptoKey, encrypted)
-      chai.assert.deepEqual(plaintext, message, 'Must get the initial message after decryption')
+      chai.assert.deepEqual(plaintext, message)
     })
   })
 
@@ -209,27 +439,27 @@ describe('Web crypto', function () {
     const passphrase = 'mySecretPass'
 
     it('Should reject if passphrase is not a string or is empty', async () => {
-      let err = { message: '_ERROR_NOT_THROWN_' }
+      let err
       try {
         await WebCrypto.genEncryptedMasterKey([])
       } catch (error) {
         err = error
       }
-      chai.assert.equal(err.message, 'Not a valid value', 'Reject if passphrase is not a string')
+      chai.assert.equal(err.message, 'Not a valid value')
     })
 
     it('Should reject if the any property of protectedMK is missing or empty', async () => {
-      let err = '_ERROR_NOT_THROWN_'
+      let err
       try {
         await WebCrypto.decryptMasterKey('secretPassphraseCandidate', {})
       } catch (error) {
         err = error
       }
-      chai.assert.equal(err.message, 'Missing properties from master key', 'A requried property is missing')
+      chai.assert.equal(err.message, 'Missing properties from master key')
     })
 
     it('Should reject if the given passphrase is NOT the same as the stored one', async () => {
-      let err = { message: '_ERROR_NOT_THROWN_' }
+      let err
       try {
         const protectedMK = await WebCrypto.genEncryptedMasterKey(passphrase)
         await WebCrypto.decryptMasterKey(passphrase + 'modifed', protectedMK)
@@ -237,7 +467,7 @@ describe('Web crypto', function () {
         err = error
       }
 
-      chai.assert.strictEqual(err.message, 'Wrong passphrase', 'Reject if wrong passphrase')
+      chai.assert.strictEqual(err.message, 'Wrong passphrase')
     })
 
     it('Should derive a passphrase with default settings, generate MK and encrypt it', async () => {
@@ -283,7 +513,7 @@ describe('Web crypto', function () {
       const masterKey = await WebCrypto.decryptMasterKey(passphrase, protectedMK)
 
       chai.assert.exists(masterKey, 'The check operation should return the MK')
-      chai.assert.lengthOf(await WebCrypto.exportKey(masterKey), 32, 'Default AES key is 256 bits long ')
+      chai.assert.lengthOf(await WebCrypto.exportKey(masterKey), 32)
     })
 
     it('Should derive a key from passphrase, gen MK, enc/dec a value', async () => {
@@ -296,16 +526,16 @@ describe('Web crypto', function () {
 
       // Just to be sure that everything is working well.
       const dec = await WebCrypto.decrypt(cryptokey, enc)
-      chai.assert.deepEqual(dec, data, 'Must be the same')
+      chai.assert.deepEqual(dec, data)
     })
 
     it('The salt and protectedMK must be different for two consecutive call to genEncryptedMasterKey even with the same passphrase', async () => {
       const passphrase = 'secret'
       const protectedMK1 = await WebCrypto.genEncryptedMasterKey(passphrase)
       const protectedMK2 = await WebCrypto.genEncryptedMasterKey(passphrase)
-      chai.assert.notStrictEqual(protectedMK1.derivationParams.salt, protectedMK2.derivationParams.salt, 'Two different salt')
-      chai.assert.notStrictEqual(protectedMK1.encryptedMasterKey.iv, protectedMK2.encryptedMasterKey.iv, 'Two different iv')
-      chai.assert.notStrictEqual(protectedMK1.encryptedMasterKey.ciphertext, protectedMK2.encryptedMasterKey.ciphertext, 'Two different ciphertext')
+      chai.assert.notStrictEqual(protectedMK1.derivationParams.salt, protectedMK2.derivationParams.salt)
+      chai.assert.notStrictEqual(protectedMK1.encryptedMasterKey.iv, protectedMK2.encryptedMasterKey.iv)
+      chai.assert.notStrictEqual(protectedMK1.encryptedMasterKey.ciphertext, protectedMK2.encryptedMasterKey.ciphertext)
     })
   })
 })

@@ -62,6 +62,126 @@ const hash = async (data, format = 'hex', name = 'SHA-256') => {
 }
 
 /**
+   * Generate an ECDA key pair based on the provided curve name
+   *
+   * @param {boolean} extractable - Specify if the generated key is extractable
+   * @param {namedCurve} namedCurve - The curve name to use
+   * @returns {Promise<CryptoKey>} - A promise containing the key pair
+   */
+const genKeyPair = (extractable = true, namedCurve = 'P-256') => {
+  return window.crypto.subtle.generateKey(
+    {
+      name: 'ECDSA',
+      namedCurve // can be "P-256", "P-384", or "P-521"
+    },
+    extractable,
+    ['sign', 'verify']
+  )
+}
+
+/**
+  * Import a public key
+  *
+  * @param {CryptoKey} key - The public CryptoKey
+  * @param {string} namedCurve - The curve name to use
+  * @returns {Promise<arrayBuffer>} - The raw key
+  */
+const importPublicKey = (key, namedCurve = 'P-256', format = 'base64') => {
+  return window.crypto.subtle.importKey(
+    'spki',
+    Buffer.from(key, format),
+    {
+      name: 'ECDSA',
+      namedCurve // can be "P-256", "P-384", or "P-521"
+    },
+    true,
+    ['verify']
+  )
+}
+
+/**
+  * Import a private key
+  *
+  * @param {CryptoKey} key - The private CryptoKey
+  * @param {string} namedCurve - The curve name to use
+  * @returns {Promise<arrayBuffer>} - The raw key
+  */
+const importPrivateKey = (key, namedCurve = 'P-256', format = 'base64') => {
+  return window.crypto.subtle.importKey(
+    'pkcs8',
+    Buffer.from(key, format),
+    {
+      name: 'ECDSA',
+      namedCurve // can be "P-256", "P-384", or "P-521"
+    },
+    true,
+    ['sign']
+  )
+}
+
+/**
+  * Export a public key
+  *
+  * @param {CryptoKey} key - The public CryptoKey
+  * @returns {Promise<arrayBuffer>} - The raw key
+  */
+const exportPublicKey = async (key, format = 'base64') => {
+  const exported = await window.crypto.subtle.exportKey('spki', key)
+  return (format === 'raw') ? new Uint8Array(exported) : Buffer.from(exported).toString(format)
+}
+
+/**
+  * Export a private key
+  *
+  * @param {CryptoKey} key - The private CryptoKey
+  * @returns {Promise<arrayBuffer>} - The raw key
+  */
+const exportPrivateKey = async (key, format = 'base64') => {
+  const exported = await window.crypto.subtle.exportKey('pkcs8', key)
+  return (format === 'raw') ? new Uint8Array(exported) : Buffer.from(exported).toString(format)
+}
+
+/**
+ * Sign data using the private key
+ *
+ * @param {CryptoKey} key - The private key
+ * @param {*} data - Data to sign
+ * @param {*} hash - The hashing algorithm
+ * @returns {Promise<arrayBuffer>} - The raw signature
+ */
+const sign = async (key, data, format = 'base64', hash = 'SHA-256') => {
+  const signature = await window.crypto.subtle.sign(
+    {
+      name: 'ECDSA',
+      hash: { name: 'SHA-256' } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+    },
+    key,
+    Buffer.from(JSON.stringify(data))
+  )
+  return (format === 'raw') ? new Uint8Array(signature) : Buffer.from(signature).toString(format)
+}
+
+/**
+ * Verify data using the public key
+ *
+ * @param {CryptoKey} key - The public key
+ * @param {*} data - Data to verify
+ * @param {*} hash - The hashing algorithm
+ * @returns {Promise<boolean>} - The verification outcome
+ */
+const verify = async (key, data, signature, format = 'base64', hash = 'SHA-256') => {
+  return window.crypto.subtle.verify(
+    {
+      name: 'ECDSA',
+      hash: { name: 'SHA-256' } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+    },
+    key,
+    Buffer.from(signature, format),
+    Buffer.from(JSON.stringify(data))
+  )
+}
+
+/**
    * Generate an AES key based on the cipher mode and keysize
    *
    * @param {boolean} [extractable] - Specify if the generated key is extractable
@@ -69,11 +189,13 @@ const hash = async (data, format = 'hex', name = 'SHA-256') => {
    * @param {Number} [keySize] - Specify if the generated key is extractable
    * @returns {Promise<CryptoKey>} - The generated AES key.
    */
-const genAESKey = (extractable, mode = 'AES-GCM', keySize = 128) => {
+const genAESKey = (extractable = true, mode = 'AES-GCM', keySize = 128) => {
   return window.crypto.subtle.generateKey({
     name: mode,
     length: keySize
-  }, extractable || true, ['decrypt', 'encrypt'])
+  },
+  extractable,
+  ['decrypt', 'encrypt'])
 }
 
 /**
@@ -333,6 +455,13 @@ const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
 module.exports = {
   genId,
   hash,
+  genKeyPair,
+  importPublicKey,
+  importPrivateKey,
+  exportPublicKey,
+  exportPrivateKey,
+  sign,
+  verify,
   genAESKey,
   importKey,
   exportKey,

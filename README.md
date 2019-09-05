@@ -5,18 +5,109 @@
 This is a wrapper around the Webcrypto API available in modern browsers. It enables faster
 development of applications that require storing encrypted data.
 
-## Usage
+# Usage
 
-### genAESKey
+## ECDA public key
 
-Generate an AES key for encryption. By default this key can be exported. It supports the
-following optional parameters: `extractable` (defaults to true), `mode` (defaults to AES-GCM), and
-`keySize` (defaults to 128).
+### genKeyPair
 
+Generates an ECDA key pair for signing and verifying. By default this key can be exported.
+It supports the following optional parameters: `extractable` (defaults to true), `namedCurve`
+that accepts `P-256`, `P-384`, and `P-521` (defaults to `P-256`).
 
 ```js
 const WebCrypto = require('web-crypto')
 
+// generate an ECDA P-256 key pair
+const keyPair = await WebCrypto.genKeyPair()
+```
+
+### exportPublicKey
+
+Export a public key using base64 format by default. `ArrayBuffer` is also supported by passing
+an optional format parameter with the value`raw`.
+
+```js
+const keyPair = await WebCrypto.genKeyPair()
+const exportedPub = await WebCrypto.exportPublicKey(keyPair.publicKey)
+// console.log(exported) -> MFkwEwYHKoZ ... UmUXN7Q27txQ==
+
+// to export using raw format
+const exportedPub = await WebCrypto.exportPublicKey(keyPair.publicKey, 'raw')
+```
+
+### exportPrivateKey
+
+Export a prvate key using base64 format by default. `ArrayBuffer` is also supported by passing
+an optional format parameter with the value`raw`.
+
+```js
+const keyPair = await WebCrypto.genKeyPair()
+const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.publicKey)
+// console.log(exported) -> MFkwEwYHKoZ ... UmUXN7Q27txQ==
+
+// to export using raw format
+const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.publicKey, 'raw')
+```
+
+### importPublicKey
+
+Import a public key using the base64 format by default. It supports the following optional parameters: `namedCurve` that accepts `P-256`, `P-384`, and `P-521` (defaults to `P-256`),
+`format` that can be `base64`, `hex`, and `raw` for ArrayBuffer (defaults to `base64`).
+
+```js
+// using the exported public key above
+const imported = await WebCrypto.importPublicKey(exportedPub)
+```
+
+### importPrivateKey
+
+Import a private key using the base64 format by default. It supports the following optional parameters: `namedCurve` that accepts `P-256`, `P-384`, and `P-521` (defaults to `P-256`),
+`format` that can be `base64`, `hex`, and `raw` for ArrayBuffer (defaults to `base64`).
+
+```js
+// using the exported private key above
+const imported = await WebCrypto.importPrivateKey(exportedPriv)
+```
+
+### sign
+
+Sign data using the private key. It supports the following optional parameters: `format`, 
+that can be `base64`, `hex`, and `raw` for ArrayBuffer (defaults to `base64`), and `hash` that
+can be of type `SHA-1`, `SHA-256`, `SHA-384`, or `SHA-512` (defaults to `SHA-256`).
+
+```js
+const data = { foo: 'bar' }
+// generate keys
+const keys = await WebCrypto.genKeyPair()
+// sign
+const sig = await WebCrypto.sign(keys.privateKey, data)
+// console.log(sig) -> Cf51pRgxund ... Tvp7hYbiRQvnTnLZLpuw==
+```
+
+### verify
+
+Verify a signature over some data using the private key. It supports the following optional
+parameters: `format` that can be `base64`, `hex`, and `raw` for ArrayBuffer (defaults to
+`base64`), and `hash` that can be of type `SHA-1`, `SHA-256`, `SHA-384`, or `SHA-512`
+(defaults to `SHA-256`).
+
+```js
+// using the signature we got above
+const isValid = await WebCrypto.verify(keys.publicKey, data, sig)
+// console.log(isValid) -> true
+```
+
+## AES
+
+### genAESKey
+
+Generates an AES key for encryption. By default this key can be exported. It supports the
+following optional parameters: `extractable` (defaults to true), `mode` (defaults to AES-GCM), and
+`keySize` with a length of `128`, `192`, or `256` (defaults to `128`).
+
+
+```js
 // genAESKey(extractable, mode = 'AES-GCM', keySize = 128)
 const key = await WebCrypto.genAESKey()
 ```
@@ -76,6 +167,7 @@ const key = WebCrypto.importKey(key)
 // use this AES key now to encrypt/decrypt as above
 ```
 
+## Passphrase-based key derivation
 
 ### genEncryptedMasterKey:
 
@@ -125,6 +217,8 @@ const updatedEncMK = await WebCrypto.updatePassphraseKey(passphrase, newPassphra
 // you can now safely store the updatedEncMK for future use
 ```
 
+## Utility
+
 ### hash:
 
 Generate the hash of a string or ArrayBuffer. It accepts the following optional parameters:
@@ -152,8 +246,44 @@ console.log(randomId) // a6d2a143edb8b521645bf5d39c29e401
 
 That's it!
 
+## Full example for signing / verifying data
 
-## Full example
+```js
+// generate a new ECDA key pair
+const keys = await WebCrypto.genKeyPair()
+
+// sign some data
+const data = { foo: 'bar' }
+const sig = await WebCrypto.sign(privKey, data)
+
+// check signature
+const isValid = await WebCrypto.verify(pubKey, data, sig)
+console.log(isValid) // -> true
+
+// EXPORT
+
+// export public key
+const exportedPub = await WebCrypto.exportPublicKey(keyPair.publicKey)
+// export private key
+const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.publicKey)
+
+// IMPORT
+
+// import public key
+const pubKey = await WebCrypto.importPublicKey(exportedPub)
+// import private key
+const privKey = await WebCrypto.importPrivateKey(exportedPriv)
+
+// sign some data using imported keys
+const data = { foo: 'bar' }
+const sig = await WebCrypto.sign(privKey, data)
+
+// check signature
+const isValid = await WebCrypto.verify(pubKey, data, sig)
+console.log(isValid) // -> true
+```
+
+## Full example for encrypting / decrypting data
 
 ```js
 const passphrase = 'your super secure passphrase'
