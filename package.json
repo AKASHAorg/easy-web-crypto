@@ -1,10 +1,15 @@
 {
     "name": "easy-web-crypto",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Webcrypto API wrapper for the browser",
     "author": "Andrei Sambra",
     "license": "MIT",
-    "keywords": ["webcrypto", "webcrypto api", "cryptography", "key derivation"],
+    "keywords": [
+        "webcrypto",
+        "webcrypto api",
+        "cryptography",
+        "key derivation"
+    ],
     "main": "dist/web-crypto.js",
     "module": "src/index.js",
     "scripts": {
