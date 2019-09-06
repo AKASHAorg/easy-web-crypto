@@ -1,5 +1,5 @@
 {
-    "name": "web-crypto",
+    "name": "easy-web-crypto",
     "version": "0.1.0",
     "description": "Webcrypto API wrapper for the browser",
     "author": "Andrei Sambra",
