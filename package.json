@@ -4,6 +4,7 @@
     "description": "Webcrypto API wrapper for the browser",
     "author": "Andrei Sambra",
     "license": "MIT",
+    "keywords": ["webcrypto", "webcrypto api", "cryptography", "key derivation"],
     "main": "dist/web-crypto.js",
     "module": "src/index.js",
     "scripts": {
