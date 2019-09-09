@@ -1,6 +1,6 @@
 {
     "name": "easy-web-crypto",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Webcrypto API wrapper for the browser",
     "author": "Andrei Sambra",
     "license": "MIT",
@@ -11,8 +11,8 @@
         "key derivation"
     ],
     "repository": {
-        "type" : "git",
-        "url" : "https://github.com/AkashaProject/easy-web-crypto.git"
+        "type": "git",
+        "url": "https://github.com/AkashaProject/easy-web-crypto.git"
     },
     "main": "dist/web-crypto.js",
     "module": "src/index.js",
