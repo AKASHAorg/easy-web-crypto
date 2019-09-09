@@ -1,6 +1,6 @@
-# Web-crypto
+# Easy-web-crypto
 
-[![Build Status](https://travis-ci.org/AkashaProject/web-crypto.svg?branch=master)](https://travis-ci.org/AkashaProject/web-crypto)
+[![Build Status](https://travis-ci.org/AkashaProject/easy-web-crypto.svg?branch=master)](https://travis-ci.org/AkashaProject/easy-web-crypto)
 
 This is a wrapper around the Webcrypto API available in modern browsers. It enables faster
 development of applications that require storing encrypted data.
@@ -16,7 +16,7 @@ It supports the following optional parameters: `extractable` (defaults to true),
 that accepts `P-256`, `P-384`, and `P-521` (defaults to `P-256`).
 
 ```js
-const WebCrypto = require('web-crypto')
+const WebCrypto = require('easy-web-crypto')
 
 // generate an ECDA P-256 key pair
 const keyPair = await WebCrypto.genKeyPair()
@@ -324,7 +324,7 @@ console.log(val) // { foo: 'bar' }
 ### Via npm
 
 ```sh
-npm install git+https://github.com/deiu/web-crypto#master
+npm install --save easy-web-crypto
 ```
 
 ### Via `<script>` tag
