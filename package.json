@@ -10,6 +10,10 @@
         "cryptography",
         "key derivation"
     ],
+    "repository": {
+        "type" : "git",
+        "url" : "https://github.com/AkashaProject/easy-web-crypto.git"
+    },
     "main": "dist/web-crypto.js",
     "module": "src/index.js",
     "scripts": {
