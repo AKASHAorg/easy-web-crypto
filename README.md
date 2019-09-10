@@ -4,7 +4,7 @@
 
 This is a wrapper around the Webcrypto API available in modern browsers. It enables fast
 development of applications that require storing as well as signing and verifying data.
-It comes with no external dependencies.
+It is well tested and it comes with no external dependencies.
 
 # Usage
 
@@ -250,6 +250,8 @@ That's it!
 ## Full example for signing / verifying data
 
 ```js
+const WebCrypto = require('easy-web-crypto')
+
 // generate a new ECDA key pair
 const keys = await WebCrypto.genKeyPair()
 
@@ -287,6 +289,8 @@ console.log(isValid) // -> true
 ## Full example for encrypting / decrypting data
 
 ```js
+const WebCrypto = require('easy-web-crypto')
+
 const passphrase = 'your super secure passphrase'
 
 // derive a new key from passphrase and generate the master AES key
