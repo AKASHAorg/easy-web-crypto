@@ -334,4 +334,5 @@ npm install --save easy-web-crypto
 
 ### Via `<script>` tag
 
-* `dist/web-WebCrypto.js` can be directly used in browsers.
+You can call `window.WebCrypto` in browsers by using `dist/web-crypto.js`.
+
