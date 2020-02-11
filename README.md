@@ -44,11 +44,11 @@ an optional format parameter with the value`raw`.
 
 ```js
 const keyPair = await WebCrypto.genKeyPair()
-const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.publicKey)
+const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.privateKey)
 // console.log(exported) -> MFkwEwYHKoZ ... UmUXN7Q27txQ==
 
 // to export using raw format
-const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.publicKey, 'raw')
+const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.privateKey, 'raw')
 ```
 
 ### importPublicKey
