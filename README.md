@@ -1,6 +1,6 @@
 # Easy-web-crypto
 
-[![Build Status](https://travis-ci.org/AkashaProject/easy-web-crypto.svg?branch=master)](https://travis-ci.org/AkashaProject/easy-web-crypto)
+[![Build Status](https://api.travis-ci.org/AKASHAorg/easy-web-crypto.svg?branch=master)](https://travis-ci.org/AKASHAorg/easy-web-crypto)
 
 This is a wrapper around the Webcrypto API available in modern browsers. It enables fast
 development of applications that require storing as well as signing and verifying data.
