@@ -3,7 +3,23 @@
  * by Andrei Sambra
  */
 
-const checkCryptokey = (key) => {
+interface CipherData {
+  ciphertext: string;
+  iv: string;
+}
+
+interface DerivationParams {
+  salt: string;
+  iterations: number;
+  hashAlgo: string;
+}
+
+interface ProtectedMasterKey {
+  derivationParams: DerivationParams;
+  encryptedMasterKey: CipherData;
+}
+
+const checkCryptokey = (key: CryptoKey) => {
   if (!key.type || key.type !== 'secret') {
     throw new Error('Invalid key type')
   }
@@ -14,7 +30,7 @@ const genRandomBuffer = (len = 16) => {
   return Buffer.from(values)
 }
 
-const genRandomBufferAsStr = (len = 16, encodingFormat = 'hex') => {
+const genRandomBufferAsStr = (len = 16, encodingFormat: BufferEncoding = 'hex') => {
   if (encodingFormat) {
     checkEncodingFormat(encodingFormat)
   }
@@ -22,13 +38,13 @@ const genRandomBufferAsStr = (len = 16, encodingFormat = 'hex') => {
   return buf.toString(encodingFormat)
 }
 
-const checkPassphrase = (str) => {
+const checkPassphrase = (str: string) => {
   if (typeof str !== 'string' || str === '') {
     throw new Error(`Not a valid value`)
   }
 }
 
-const checkEncodingFormat = (format) => {
+const checkEncodingFormat = (format: BufferEncoding) => {
   if (format !== 'hex' && format !== 'base64') throw new Error('Invalid encoding')
 }
 
@@ -51,7 +67,7 @@ const genId = (len = 32) => {
  * @param {string} [name] The hashing algorithm (SHA-256 by default)
  * @returns {Promise<String>}  A promise that contains the hash as a String encoded with encodingFormat
  */
-const hash = async (data, format = 'hex', name = 'SHA-256') => {
+const hash = async (data: string | ArrayBuffer, format: BufferEncoding = 'hex', name = 'SHA-256') => {
   const digest = await window.crypto.subtle.digest(
     {
       name
@@ -79,6 +95,10 @@ const genKeyPair = (extractable = true, namedCurve = 'P-256') => {
   )
 }
 
+// Helper to correctly select return type based on format argument.
+type KeyBufferEncoding = BufferEncoding | 'raw';
+type SelectKeyType<TFormat extends KeyBufferEncoding> = TFormat extends 'raw' ? Uint8Array : string;
+
 /**
   * Import a public key
   *
@@ -86,10 +106,14 @@ const genKeyPair = (extractable = true, namedCurve = 'P-256') => {
   * @param {string} namedCurve - The curve name to use
   * @returns {Promise<arrayBuffer>} - The raw key
   */
-const importPublicKey = (key, namedCurve = 'P-256', format = 'base64') => {
+function importPublicKey(key: string): Promise<CryptoKey>;
+function importPublicKey(key: string, namedCurve: string): Promise<CryptoKey>;
+function importPublicKey<TFormat extends KeyBufferEncoding>(key: SelectKeyType<TFormat>, namedCurve: string, format: TFormat): Promise<CryptoKey>;
+
+function importPublicKey(key: string | Uint8Array, namedCurve = 'P-256', format: KeyBufferEncoding = 'base64') {
   return window.crypto.subtle.importKey(
     'spki',
-    Buffer.from(key, format),
+    typeof key === 'string' ? Buffer.from(key, format as BufferEncoding) : key,
     {
       name: 'ECDSA',
       namedCurve // can be "P-256", "P-384", or "P-521"
@@ -106,10 +130,14 @@ const importPublicKey = (key, namedCurve = 'P-256', format = 'base64') => {
   * @param {string} namedCurve - The curve name to use
   * @returns {Promise<arrayBuffer>} - The raw key
   */
-const importPrivateKey = (key, namedCurve = 'P-256', format = 'base64') => {
+function importPrivateKey(key: string): Promise<CryptoKey>;
+function importPrivateKey(key: string, namedCurve: string): Promise<CryptoKey>;
+function importPrivateKey<TFormat extends KeyBufferEncoding>(key: SelectKeyType<TFormat>, namedCurve: string, format: TFormat): Promise<CryptoKey>;
+
+function importPrivateKey(key: string | Uint8Array, namedCurve = 'P-256', format: KeyBufferEncoding = 'base64') {
   return window.crypto.subtle.importKey(
     'pkcs8',
-    Buffer.from(key, format),
+    typeof key === 'string' ? Buffer.from(key, format as BufferEncoding) : key,
     {
       name: 'ECDSA',
       namedCurve // can be "P-256", "P-384", or "P-521"
@@ -123,9 +151,13 @@ const importPrivateKey = (key, namedCurve = 'P-256', format = 'base64') => {
   * Export a public key
   *
   * @param {CryptoKey} key - The public CryptoKey
-  * @returns {Promise<arrayBuffer>} - The raw key
+  * @returns {Promise<arrayBuffer | string>} - The raw key
   */
-const exportPublicKey = async (key, format = 'base64') => {
+
+function exportPublicKey(key: CryptoKey): Promise<string>;
+function exportPublicKey<TFormat extends KeyBufferEncoding> (key: CryptoKey, format: TFormat): Promise<SelectKeyType<TFormat>>;
+
+async function exportPublicKey(key: CryptoKey, format: KeyBufferEncoding = 'base64') {
   const exported = await window.crypto.subtle.exportKey('spki', key)
   return (format === 'raw') ? new Uint8Array(exported) : Buffer.from(exported).toString(format)
 }
@@ -136,7 +168,10 @@ const exportPublicKey = async (key, format = 'base64') => {
   * @param {CryptoKey} key - The private CryptoKey
   * @returns {Promise<arrayBuffer>} - The raw key
   */
-const exportPrivateKey = async (key, format = 'base64') => {
+function exportPrivateKey(key: CryptoKey): Promise<string>;
+function exportPrivateKey<TFormat extends KeyBufferEncoding> (key: CryptoKey, format: TFormat): Promise<SelectKeyType<TFormat>>;
+ 
+async function exportPrivateKey(key: CryptoKey, format: KeyBufferEncoding = 'base64') {
   const exported = await window.crypto.subtle.exportKey('pkcs8', key)
   return (format === 'raw') ? new Uint8Array(exported) : Buffer.from(exported).toString(format)
 }
@@ -149,11 +184,11 @@ const exportPrivateKey = async (key, format = 'base64') => {
  * @param {*} hash - The hashing algorithm
  * @returns {Promise<arrayBuffer>} - The raw signature
  */
-const sign = async (key, data, format = 'base64', hash = 'SHA-256') => {
+const sign = async (key: CryptoKey, data: any, format: KeyBufferEncoding = 'base64', hash = 'SHA-256') => {
   const signature = await window.crypto.subtle.sign(
     {
       name: 'ECDSA',
-      hash: { name: 'SHA-256' } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+      hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     },
     key,
     Buffer.from(JSON.stringify(data))
@@ -169,11 +204,11 @@ const sign = async (key, data, format = 'base64', hash = 'SHA-256') => {
  * @param {*} hash - The hashing algorithm
  * @returns {Promise<boolean>} - The verification outcome
  */
-const verify = async (key, data, signature, format = 'base64', hash = 'SHA-256') => {
+const verify = async (key: CryptoKey, data: any, signature: string, format: BufferEncoding = 'base64', hash = 'SHA-256') => {
   return window.crypto.subtle.verify(
     {
       name: 'ECDSA',
-      hash: { name: 'SHA-256' } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+      hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     },
     key,
     Buffer.from(signature, format),
@@ -206,8 +241,8 @@ const genAESKey = (extractable = true, mode = 'AES-GCM', keySize = 128) => {
     * @param {string} [mode] - The mode of the key to import (default 'AES-GCM')
     * @returns {Promise<arrayBuffer>} - The cryptoKey
     */
-const importKey = (key, type = 'raw', mode = 'AES-GCM') => {
-  const parsedKey = (type === 'raw') ? Buffer.from(key, 'base64') : key
+const importKey = (key: ArrayBuffer, type = 'raw', mode = 'AES-GCM') => {
+  const parsedKey = (type === 'raw') ? Buffer.from(key as unknown as string, 'base64') : key
   return window.crypto.subtle.importKey(type, parsedKey, { name: mode }
     , true, ['encrypt', 'decrypt'])
 }
@@ -219,9 +254,9 @@ const importKey = (key, type = 'raw', mode = 'AES-GCM') => {
   * @param {string} [type] - The type of the exported key: raw|jwk
   * @returns {Promise<arrayBuffer>} - The raw key or the key as a jwk format
   */
-const exportKey = async (key, type = 'raw') => {
+const exportKey = async (key: CryptoKey, type: 'raw' | 'pkcs8' | 'spki' | 'jwk' = 'raw') => {
   const exportedKey = await window.crypto.subtle.exportKey(type, key)
-  return (type === 'raw') ? new Uint8Array(exportedKey) : exportedKey
+  return (type === 'raw') ? new Uint8Array(exportedKey as ArrayBuffer) : exportedKey as ArrayBuffer
 }
 
 /**
@@ -232,7 +267,7 @@ const exportKey = async (key, type = 'raw') => {
    * @param {Object} cipherContext - The AES cipher parameters
    * @returns {ArrayBuffer} - The encrypted buffer
    */
-const encryptBuffer = async (key, data, cipherContext) => {
+const encryptBuffer = async <TCipherContext extends Algorithm>(key: CryptoKey, data: Buffer, cipherContext: TCipherContext) => {
   const encrypted = await window.crypto.subtle.encrypt(cipherContext, key, data)
   return new Uint8Array(encrypted)
 }
@@ -244,7 +279,7 @@ const encryptBuffer = async (key, data, cipherContext) => {
  * @param {Object} cipherContext - The AES cipher parameters
  * @returns {Promise<ArrayBuffer>} - The decrypted buffer
  */
-const decryptBuffer = async (key, data, cipherContext) => {
+const decryptBuffer = async <TCipherContext extends Algorithm>(key: CryptoKey, data: ArrayBuffer, cipherContext: TCipherContext) => {
   // TODO: test input params
   try {
     const decrypted = await window.crypto.subtle.decrypt(cipherContext, key, data)
@@ -264,7 +299,7 @@ const decryptBuffer = async (key, data, cipherContext) => {
  * @param {string} [format] - The ciphertext and iv encoding format
  * @returns {Object} - The stringified ciphertext object (ciphertext and iv)
  */
-const encrypt = async (key, data, format = 'hex') => {
+const encrypt = async (key: CryptoKey, data: string | object, format: BufferEncoding = 'hex'): Promise<CipherData> => {
   checkCryptokey(key)
   const context = {
     iv: genRandomBuffer(key.algorithm.name === 'AES-GCM' ? 12 : 16),
@@ -288,14 +323,14 @@ const encrypt = async (key, data, format = 'hex') => {
    * Decrypt data
    *
    * @param {CryptoKey} key - The AES CryptoKey
-   * @param {string | Object} - The data to encrypt
+   * @param {string | Object} - The data to decrypt
    * @param {string} [format] - The ciphertext and iv encoding format
    */
-const decrypt = async (key, ciphertext, format = 'hex') => {
+const decrypt = async (key: CryptoKey, ciphertext: CipherData, format: BufferEncoding = 'hex') => {
   checkCryptokey(key)
 
   const context = {
-    ciphertext: Object.prototype.hasOwnProperty.call(ciphertext, 'ciphertext') ? Buffer.from(ciphertext.ciphertext, (format)) : '',
+    ciphertext: Buffer.from(Object.prototype.hasOwnProperty.call(ciphertext, 'ciphertext') ? ciphertext.ciphertext : '', (format)),
     // IV is 128 bits long === 16 bytes
     iv: Object.prototype.hasOwnProperty.call(ciphertext, 'iv') ? Buffer.from(ciphertext.iv, (format)) : ''
   }
@@ -307,6 +342,9 @@ const decrypt = async (key, ciphertext, format = 'hex') => {
   }
   try {
     const decrypted = await decryptBuffer(key, context.ciphertext, cipherContext)
+    if (decrypted === undefined) {
+      throw new Error();
+    }
     return JSON.parse(Buffer.from(decrypted).toString())
   } catch (error) {
     throw new Error('Unable to decrypt data')
@@ -322,7 +360,7 @@ const decrypt = async (key, ciphertext, format = 'hex') => {
  * @param {string} [hashAlgo] The hash function used for derivation
  * @returns {Promise<Uint8Array>} A promise that contains the derived key
  */
-const deriveBits = async (passPhrase, salt, iterations, hashAlgo) => {
+const deriveBits = async (passPhrase: string | ArrayBuffer, salt: ArrayBuffer, iterations: number, hashAlgo: string) => {
   // Always specify a strong salt
   if (iterations < 10000) { console.warn('Less than 10000 :(') }
 
@@ -346,14 +384,14 @@ const deriveBits = async (passPhrase, salt, iterations, hashAlgo) => {
 /**
  * Derive a key based on a given passphrase
  *
- * @param {string | arrayBuffer} passPhrase The passphrase that is used to derive the key
+ * @param {string} passPhrase The passphrase that is used to derive the key
  * @param {arrayBuffer} [salt] The salt
  * @param {Number} [iterations] The iterations number
  * @param {string} [hashAlgo] The hash function used for derivation and final hash computing
  * @returns {Promise<keyEncryptionKey>} A promise that contains the derived key and derivation
  * parameters
  */
-const deriveKeyFromPassphrase = async (passPhrase, salt = genRandomBuffer(16), iterations = 100000, hashAlgo = 'SHA-256') => {
+const deriveKeyFromPassphrase = async (passPhrase: string, salt = genRandomBuffer(16), iterations = 100000, hashAlgo: string = 'SHA-256') => {
   checkPassphrase(passPhrase)
 
   const derivedKey = await deriveBits(passPhrase, salt, iterations, hashAlgo)
@@ -373,18 +411,18 @@ const deriveKeyFromPassphrase = async (passPhrase, salt = genRandomBuffer(16), i
  * Generate a AES key (masterKey)
  * Encrypt the masterKey with the KEK
  *
- * @param {string | arrayBuffer} passPhrase The passphrase that is used to derive the key
+ * @param {string} passPhrase The passphrase that is used to derive the key
  * @param {arrayBuffer} [salt] The salt
  * @param {Number} [iterations] The iterations number
  * @param {string} [hashAlgo] The hash function used for derivation and final hash computing
  * @returns {Promise<protectedMasterKey>} A promise that contains the encrypted derived key
  */
-const genEncryptedMasterKey = async (passPhrase, salt, iterations, hashAlgo) => {
+const genEncryptedMasterKey = async (passPhrase: string, salt?: Buffer, iterations?: number, hashAlgo?: string): Promise<ProtectedMasterKey> => {
   // derive key encryption key from passphrase
   const keyEncryptionKey = await deriveKeyFromPassphrase(passPhrase, salt, iterations, hashAlgo)
 
   // Generate the masterKey
-  const masterKey = await genRandomBufferAsStr(32, 'hex')
+  const masterKey = genRandomBufferAsStr(32, 'hex')
 
   const encryptedMasterKey = await encrypt(keyEncryptionKey.key, masterKey)
 
@@ -398,15 +436,15 @@ const genEncryptedMasterKey = async (passPhrase, salt, iterations, hashAlgo) => 
  * Update the derived encryption key (KEK) based on the new passphrase from user, while retaining
  * the symmetric key that encrypts data at rest
  *
- * @param {string | arrayBuffer} currentPassPhrase The current (old) passphrase that is used to derive the key
- * @param {string | arrayBuffer} newPassPhrase The new passphrase that will be used to derive the key
+ * @param {string} currentPassPhrase The current (old) passphrase that is used to derive the key
+ * @param {string} newPassPhrase The new passphrase that will be used to derive the key
  * @param {oldMasterKey} oldMasterKey - The old object returned by genEncryptedMasterKey for the old passphrase
  * @param {arrayBuffer} [salt] The salt
  * @param {Number} [iterations] The iterations number
  * @param {string} [hashAlgo] The hash function used for derivation and final hash computing
  * @returns {Promise<protectedMasterKey>}
  */
-const updatePassphraseKey = async (currentPassPhrase, newPassPhrase, oldMasterKey, salt, iterations, hashAlgo) => {
+const updatePassphraseKey = async (currentPassPhrase: string, newPassPhrase: string, oldMasterKey: ProtectedMasterKey, salt?: Buffer, iterations?: number, hashAlgo?: string): Promise<ProtectedMasterKey> => {
   const masterKey = await decryptMasterKey(currentPassPhrase, oldMasterKey)
   // derive a new key encryption key from newPassPhrase
   const keyEncryptionKey = await deriveKeyFromPassphrase(newPassPhrase, salt, iterations, hashAlgo)
@@ -431,7 +469,7 @@ const updatePassphraseKey = async (currentPassPhrase, newPassPhrase, oldMasterKe
  * by genEncryptedMasterKey
  * @returns {Promise<masterKey>} A promise that contains the masterKey
  */
-const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
+const decryptMasterKey = async (passPhrase: string, protectedMasterKey: ProtectedMasterKey) => {
   if (!protectedMasterKey.encryptedMasterKey ||
     !protectedMasterKey.derivationParams) {
     throw new Error('Missing properties from master key')
@@ -452,7 +490,10 @@ const decryptMasterKey = async (passPhrase, protectedMasterKey) => {
   }
 }
 
-module.exports = {
+const _genRandomBuffer = genRandomBuffer;
+const _genRandomBufferAsStr = genRandomBufferAsStr;
+
+export {
   genId,
   hash,
   genKeyPair,
@@ -472,6 +513,9 @@ module.exports = {
   genEncryptedMasterKey,
   decryptMasterKey,
   updatePassphraseKey,
-  _genRandomBuffer: genRandomBuffer,
-  _genRandomBufferAsStr: genRandomBufferAsStr
+  _genRandomBuffer,
+  _genRandomBufferAsStr,
+  CipherData,
+  DerivationParams,
+  ProtectedMasterKey
 }
