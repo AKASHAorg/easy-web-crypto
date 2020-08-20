@@ -15,18 +15,21 @@
         "url": "https://github.com/AKASHAorg/easy-web-crypto.git"
     },
     "main": "dist/web-crypto.js",
-    "module": "src/index.js",
+    "module": "src/web-crypto.js",
     "scripts": {
         "build": "webpack -p",
         "test-only": "mocha-headless-chrome -f ./test/index.html -a no-sandbox -a disable-setuid-sandbox",
         "test": "npm run build && mocha-headless-chrome -f ./test/index.html -a no-sandbox -a disable-setuid-sandbox"
     },
     "devDependencies": {
+        "@types/node": "^14.6.0",
         "babel": "^6.23.0",
         "chai": "^4.2.0",
         "mocha": "^6.2.0",
         "mocha-headless-chrome": "^2.0.3",
         "standard": "^13.1.0",
+        "ts-loader": "^8.0.2",
+        "typescript": "^3.9.7",
         "webpack": "^4.39.2",
         "webpack-cli": "^3.3.6"
     }
