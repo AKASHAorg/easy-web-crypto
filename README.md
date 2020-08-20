@@ -6,6 +6,8 @@ This is a wrapper around the Webcrypto API available in modern browsers. It enab
 development of applications that require storing as well as signing and verifying data.
 It is well tested and it comes with no external dependencies.
 
+Huge thanks to @Jopie64 for Typescriptifying the source!
+
 # Usage
 
 ## ECDA public key
