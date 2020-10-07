@@ -2,13 +2,35 @@
 
 [![Build Status](https://api.travis-ci.org/AKASHAorg/easy-web-crypto.svg?branch=master)](https://travis-ci.org/AKASHAorg/easy-web-crypto)
 
-This is a wrapper around the Webcrypto API available in modern browsers. It enables fast
+This is a wrapper around the WebCrypto API available in modern browsers. It enables fast
 development of applications that require storing as well as signing and verifying data.
 It is well tested and it comes with no external dependencies.
 
 Huge thanks to @Jopie64 for Typescriptifying the source!
 
+## Installing
+
+### via npm
+
+Enter this into your terminal with npm installed. 
+```sh
+npm install --save easy-web-crypto
+```
+
+### via `<script>` tag
+
+Either host `dist/web-crypto.js` yourself or use jsDelivr like this:
+```html
+<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/easy-web-crypto@1.2.2/dist/web-crypto.js"></script>
+```
+*You can use `window.WebCrypto` to access the API after installing.*
+
 # Usage
+
+### Sidenote
+
+Although this wrapper is compatible with SHA-1,
+we strongly recommend **against** using it in modern cryptographic applications unless absolutely necessary.
 
 ## ECDA public key
 
@@ -28,7 +50,7 @@ const keyPair = await WebCrypto.genKeyPair()
 ### exportPublicKey
 
 Export a public key using base64 format by default. `ArrayBuffer` is also supported by passing
-an optional format parameter with the value`raw`.
+an optional format parameter with the value `raw`.
 
 ```js
 const keyPair = await WebCrypto.genKeyPair()
@@ -41,8 +63,8 @@ const exportedPub = await WebCrypto.exportPublicKey(keyPair.publicKey, 'raw')
 
 ### exportPrivateKey
 
-Export a prvate key using base64 format by default. `ArrayBuffer` is also supported by passing
-an optional format parameter with the value`raw`.
+Export a private key using base64 format by default. `ArrayBuffer` is also supported by passing
+an optional format parameter with the value `raw`.
 
 ```js
 const keyPair = await WebCrypto.genKeyPair()
@@ -60,7 +82,7 @@ Import a public key using the base64 format by default. It supports the followin
 
 ```js
 // using the exported public key above
-const imported = await WebCrypto.importPublicKey(exportedPub)
+const importedPub = await WebCrypto.importPublicKey(exportedPub)
 ```
 
 ### importPrivateKey
@@ -70,7 +92,7 @@ Import a private key using the base64 format by default. It supports the followi
 
 ```js
 // using the exported private key above
-const imported = await WebCrypto.importPrivateKey(exportedPriv)
+const importedPriv = await WebCrypto.importPrivateKey(exportedPriv)
 ```
 
 ### sign
@@ -115,9 +137,9 @@ following optional parameters: `extractable` (defaults to true), `mode` (default
 const key = await WebCrypto.genAESKey()
 ```
 
-### encrypt:
+### encrypt
 
-Encrypt a string|Object using an AES key.
+Encrypt a String|Object using an AES key.
 
 ```js
 const data = { foo: 'bar' }
@@ -126,14 +148,16 @@ const data = { foo: 'bar' }
 const encrypted = await WebCrypto.encrypt(key, data)
 ```
 
-### decrypt:
+### decrypt
+
+Decrypt an encrypted String|Object using an AES key.
 
 ```js
 const val = await WebCrypto.decrypt(key, encrypted)
 console.log(val) // { foo: 'bar' }
 ```
 
-### encryptBuffer:
+### encryptBuffer
 
 Encrypt an ArrayBuffer using an AES key.
 
@@ -144,21 +168,23 @@ const buffer = new ArrayBuffer(8)
 const encrypted = WebCrypto.encryptBuffer(key, buffer)
 ```
 
-### decryptBuffer:
+### decryptBuffer
+
+Dncrypt an ArrayBuffer using an AES key.
 
 ```js
 WebCrypto.decryptBuffer(key, encrypted).then(val => console.log(val)) // ArrayBuffer {}
 ```
 
-### exportKey:
+### exportKey
 
-Export an AES key into a raw|jwk key (defaults to raw) that can be stored.
+Export an AES key into a raw|JWK key (defaults to raw) that can be stored.
 
 ```js
 const exported = WebCrypto.exportKey(key)
 ```
 
-### importKey:
+### importKey
 
 Imports an AES key. It accepts the following optional parameters: `type` (defaults
 to raw), `mode` (defaults to AES-GCM).
@@ -172,9 +198,9 @@ const key = WebCrypto.importKey(key)
 
 ## Passphrase-based key derivation
 
-### genEncryptedMasterKey:
+### genEncryptedMasterKey
 
-Uses PBKDF2 to derive a Key Encryption Key from a passphrase, in order to generate an encrypted
+Uses `PBKDF2` to derive a Key Encryption Key from a passphrase, in order to generate an encrypted
 AES symmetric key that can be safely stored. It accepts the following optional parameters:
 `salt` (defaults to a random ArrayBuffer(16)), `iterations` (defaults to 10000), `hashAlgo`
 (defaults to SHA-256).
@@ -190,7 +216,7 @@ const encMasterKey = await WebCrypto.genEncryptedMasterKey(passphrase)
 // you can now safely store the encMasterKey for future use
 ```
 
-### decryptMasterKey:
+### decryptMasterKey
 
 Decrypt a master key by deriving the encryption key from the provided passphrase and encrypted
 master key.
@@ -203,9 +229,9 @@ const key = await WebCrypto.decryptMasterKey(passphrase, encMasterKey)
 ```
 
 
-### updatePassphraseKey:
+### updatePassphraseKey
 
-Update the derived key encryption key (KEK) based on the new passphrase from user.
+Update the derived key encryption key (KEK) based on the new passphrase.
 
 Please note that the actual AES key used for encryption does not change, so you can still
 decrypt previously encrypted data. Only the passphrase changed!
@@ -222,11 +248,10 @@ const updatedEncMK = await WebCrypto.updatePassphraseKey(passphrase, newPassphra
 
 ## Utility
 
-### hash:
+### hash
 
 Generate the hash of a string or ArrayBuffer. It accepts the following optional parameters:
-`outputFormat` (defaults to hex), and `name` (defaults to SHA-256 but also supports SHA-1
-(don't use this in cryptographic applications), SHA-384, and SHA-512 algorithms).
+`outputFormat` (defaults to hex), and `name` (defaults to SHA-256 but also supports SHA-1, SHA-384, and SHA-512 algorithms).
 
 ```js
 // hash(data, outputFormat = 'hex', name = 'SHA-256')
@@ -236,9 +261,9 @@ console.log(hashed)
 // 6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090
 ```
 
-### genId:
+### genId
 
-Generate a random hexadecimal ID based on the provided length. Defaults to a length of 16.
+Generate a random secure hexadecimal ID based on the provided length. Defaults to a length of 16.
 
 ```js
 const randomId = WebCrypto.genId(32)
@@ -255,14 +280,14 @@ That's it!
 const WebCrypto = require('easy-web-crypto')
 
 // generate a new ECDA key pair
-const keys = await WebCrypto.genKeyPair()
+const keyPair = await WebCrypto.genKeyPair()
 
 // sign some data
 const data = { foo: 'bar' }
-const sig = await WebCrypto.sign(privKey, data)
+const sig = await WebCrypto.sign(keyPair.privateKey, data)
 
 // check signature
-const isValid = await WebCrypto.verify(pubKey, data, sig)
+const isValid = await WebCrypto.verify(keyPair.publicKey, data, sig)
 console.log(isValid) // -> true
 
 // EXPORT
@@ -270,7 +295,7 @@ console.log(isValid) // -> true
 // export public key
 const exportedPub = await WebCrypto.exportPublicKey(keyPair.publicKey)
 // export private key
-const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.publicKey)
+const exportedPriv = await WebCrypto.exportPrivateKey(keyPair.privateKey)
 
 // IMPORT
 
@@ -314,27 +339,13 @@ console.log(val) // { foo: 'bar' }
 // change passphrase
 const newPassphrase = 'something different from the last passphrase'
 
-// updatePassphraseKey(oldassphrase, newPassphrase, oldEncryptedMasterKey)
-const updatedEncMK = await WebCrypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
+// updatePassphraseKey(oldPassphrase, newPassphrase, oldEncryptedMasterKey)
+const updatedEncMasterKey = await WebCrypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
 
 // decrypt new master key
-key = await WebCrypto.decryptMasterKey(newPassphrase, updatedEncMK)
+key = await WebCrypto.decryptMasterKey(newPassphrase, updatedEncMasterKey)
 
 // decrypt the previous data
 val = await WebCrypto.decrypt(key, encrypted)
 console.log(val) // { foo: 'bar' }
 ```
-
-
-## Installing
-
-### Via npm
-
-```sh
-npm install --save easy-web-crypto
-```
-
-### Via `<script>` tag
-
-You can call `window.WebCrypto` in browsers by using `dist/web-crypto.js`.
-
