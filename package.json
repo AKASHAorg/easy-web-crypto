@@ -1,6 +1,6 @@
 {
     "name": "easy-web-crypto",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "description": "Webcrypto API wrapper for the browser",
     "author": "Andrei Sambra",
     "license": "MIT",
