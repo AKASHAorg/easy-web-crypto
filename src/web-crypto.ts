@@ -1,6 +1,6 @@
 /**
- * Originally from https://github.com/QwantResearch/masq-common/ with improvements
- * by Andrei Sambra
+ * Originally from https://github.com/QwantResearch/masq-common/ 
+ * with improvements by Andrei Sambra
  */
 
 interface CipherData {
