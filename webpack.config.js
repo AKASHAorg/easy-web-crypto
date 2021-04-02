@@ -14,7 +14,7 @@ module.exports = {
     ],
   },  
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist/cjs'),
     filename: 'web-crypto.js',
     library: 'WebCrypto',
     libraryTarget: 'umd',
