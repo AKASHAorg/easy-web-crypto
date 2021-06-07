@@ -131,7 +131,7 @@ describe('Web crypto', function () {
       chai.assert.isTrue(keypair.privateKey.extractable)
     })
 
-    it('Should generate a key pair with unextractable private key using default parameters', async () => {
+    it('Should generate a key pair with unextractable private key using default namedCurve parameter', async () => {
       let err
       let keypair
       try {
