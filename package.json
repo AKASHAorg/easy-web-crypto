@@ -20,22 +20,25 @@
         "dist/"
     ],
     "scripts": {
-        "build": "npm run tsc && webpack -p",
+        "build": "npm run tsc && webpack --mode production",
         "test-only": "mocha-headless-chrome -f ./test/index.html -a no-sandbox -a disable-setuid-sandbox",
         "test": "npm run build && mocha-headless-chrome -f ./test/index.html -a no-sandbox -a disable-setuid-sandbox",
         "tsc": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
         "prepublish": "npm run tsc"
     },
     "devDependencies": {
-        "@types/node": "^14.6.0",
+        "@types/node": "^16.3.3",
         "babel": "^6.23.0",
-        "chai": "^4.2.0",
-        "mocha": "^8.1.3",
-        "mocha-headless-chrome": "^2.0.3",
-        "standard": "^13.1.0",
-        "ts-loader": "^8.0.2",
-        "typescript": "^3.9.7",
-        "webpack": "^4.46.0",
-        "webpack-cli": "^3.3.12"
+        "chai": "^4.3.4",
+        "mocha": "^9.0.2",
+        "mocha-headless-chrome": "^3.1.0",
+        "standard": "^16.0.3",
+        "ts-loader": "^9.2.3",
+        "typescript": "^4.3.5",
+        "webpack": "^5.45.1",
+        "webpack-cli": "^4.7.2"
+    },
+    "dependencies": {
+        "buffer": "github:feross/buffer"
     }
 }

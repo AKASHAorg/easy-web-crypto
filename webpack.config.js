@@ -20,7 +20,9 @@ module.exports = {
     libraryTarget: 'umd',
     umdNamedDefine: true
   },
-  node: {
-    fs: 'empty'
+  resolve: {
+    fallback: {
+      fs: false
+    }
   }
 }
