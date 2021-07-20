@@ -3,6 +3,8 @@
  * with improvements by Andrei Sambra
  */
 
+import { Buffer } from 'buffer';
+
 interface CipherData {
   ciphertext: string;
   iv: string;

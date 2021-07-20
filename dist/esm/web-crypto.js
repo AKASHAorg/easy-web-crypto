@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { Buffer } from 'buffer';
 const checkCryptokey = (key) => {
     if (!key.type || key.type !== 'secret') {
         throw new Error('Invalid key type');

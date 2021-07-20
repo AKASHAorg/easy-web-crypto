@@ -107,14 +107,14 @@ describe('Web crypto', function () {
       } catch (error) {
         err = error
       }
-      chai.assert.equal(err.message, 'EcKeyGenParams: Unrecognized namedCurve')
+      chai.expect(err.message).to.contain('EcKeyGenParams: Unrecognized namedCurve')
 
       try {
         await WebCrypto.genKeyPair(undefined, 'P-256')
       } catch (error) {
         err = error
       }
-      chai.assert.equal(err.message, 'EcKeyGenParams: Unrecognized namedCurve')
+      chai.expect(err.message).to.contain('EcKeyGenParams: Unrecognized namedCurve')
     })
 
     it('Should generate an extractable key pair with default parameters', async () => {
@@ -185,7 +185,7 @@ describe('Web crypto', function () {
       } catch (error) {
         err = error
       }
-      chai.assert.equal(err.message, 'EcKeyImportParams: Unrecognized namedCurve')
+      chai.expect(err.message).to.contain('EcKeyImportParams: Unrecognized namedCurve')
 
       try {
         await WebCrypto.importPublicKey(undefined, 'P-256')
@@ -256,7 +256,7 @@ describe('Web crypto', function () {
       } catch (error) {
         err = error
       }
-      chai.assert.equal(err.message, 'EcKeyImportParams: Unrecognized namedCurve')
+      chai.expect(err.message).to.contain('EcKeyImportParams: Unrecognized namedCurve')
 
       try {
         await WebCrypto.importPrivateKey(undefined, 'P-256')

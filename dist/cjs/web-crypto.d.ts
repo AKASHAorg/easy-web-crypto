@@ -3,6 +3,7 @@
  * with improvements by Andrei Sambra
  */
 /// <reference types="node" />
+import { Buffer } from 'buffer';
 interface CipherData {
     ciphertext: string;
     iv: string;
@@ -39,7 +40,7 @@ declare const hash: (data: string | ArrayBuffer, format?: BufferEncoding, name?:
    * @param {namedCurve} namedCurve - The curve name to use
    * @returns {Promise<CryptoKey>} - A promise containing the key pair
    */
-declare const genKeyPair: (extractable?: boolean, namedCurve?: string) => PromiseLike<CryptoKeyPair>;
+declare const genKeyPair: (extractable?: boolean, namedCurve?: string) => Promise<CryptoKeyPair>;
 declare type KeyBufferEncoding = BufferEncoding | 'raw';
 declare type SelectKeyType<TFormat extends KeyBufferEncoding> = TFormat extends 'raw' ? Uint8Array : string;
 /**
@@ -104,7 +105,7 @@ declare const verify: (key: CryptoKey, data: any, signature: string, format?: Bu
    * @param {Number} [keySize] - Specify if the generated key is extractable
    * @returns {Promise<CryptoKey>} - The generated AES key.
    */
-declare const genAESKey: (extractable?: boolean, mode?: string, keySize?: number) => PromiseLike<CryptoKey>;
+declare const genAESKey: (extractable?: boolean, mode?: string, keySize?: number) => Promise<CryptoKey>;
 /**
     * Import a raw|jwk as a CryptoKey
     *
@@ -113,7 +114,7 @@ declare const genAESKey: (extractable?: boolean, mode?: string, keySize?: number
     * @param {string} [mode] - The mode of the key to import (default 'AES-GCM')
     * @returns {Promise<arrayBuffer>} - The cryptoKey
     */
-declare const importKey: (key: ArrayBuffer, type?: string, mode?: string) => PromiseLike<CryptoKey>;
+declare const importKey: (key: ArrayBuffer, type?: string, mode?: string) => Promise<CryptoKey>;
 /**
   * Export a CryptoKey into a raw|jwk key
   *
