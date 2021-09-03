@@ -234,7 +234,8 @@ const key = await WebCrypto.decryptMasterKey(passphrase, encMasterKey)
 Update the derived key encryption key (KEK) based on the new passphrase.
 
 Please note that the actual AES key used for encryption does not change, so you can still
-decrypt previously encrypted data. Only the passphrase changed!
+decrypt previously encrypted data. Only the passphrase that is used to encrypt the AES key
+changes!
 
 ```js
 // use the values from genEncryptedMasterKey example + the new passphrase
@@ -321,26 +322,29 @@ const WebCrypto = require('easy-web-crypto')
 const passphrase = 'your super secure passphrase'
 
 // derive a new key from passphrase and generate the master AES key
+// (you can now store this encrypted key for later use)
 const encMasterKey = await WebCrypto.genEncryptedMasterKey(passphrase)
 
-// decrypt the AES key
+// decrypt the (stored) AES key to be able to encrypt/decrypt data
 let key = await WebCrypto.decryptMasterKey(passphrase, encMasterKey)
 
 // encrypt some data
 const data = { foo: 'bar' }
 
-// using the key generated above
+// use the decrypted AES key from above
 const encrypted = await WebCrypto.encrypt(key, data)
 
-// decrypt the data
+// decrypt the data we just encrypted
 let val = await WebCrypto.decrypt(key, encrypted)
 console.log(val) // { foo: 'bar' }
 
 // change passphrase
 const newPassphrase = 'something different from the last passphrase'
 
-// updatePassphraseKey(oldPassphrase, newPassphrase, oldEncryptedMasterKey)
-const updatedEncMasterKey = await WebCrypto.updatePassphraseKey(passphrase, newPassphrase, encMasterKey)
+// updated the encrypted master key (for security reasons you should always
+// rotate keys after a certain period of time)
+const updatedEncMasterKey = await WebCrypto.updatePassphraseKey(passphrase,
+  newPassphrase, encMasterKey)
 
 // decrypt new master key
 key = await WebCrypto.decryptMasterKey(newPassphrase, updatedEncMasterKey)
