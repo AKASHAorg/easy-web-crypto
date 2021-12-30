@@ -243,7 +243,7 @@ const genAESKey = (extractable = true, mode = 'AES-GCM', keySize = 128) => {
     * @param {string} [mode] - The mode of the key to import (default 'AES-GCM')
     * @returns {Promise<arrayBuffer>} - The cryptoKey
     */
-const importKey = (key: ArrayBuffer, type = 'raw', mode = 'AES-GCM') => {
+const importKey = (key: ArrayBuffer, type: 'pkcs8' | 'spki' | 'raw' = 'raw', mode = 'AES-GCM') => {
   const parsedKey = (type === 'raw') ? Buffer.from(key as unknown as string, 'base64') : key
   return window.crypto.subtle.importKey(type, parsedKey, { name: mode }
     , true, ['encrypt', 'decrypt'])
@@ -256,7 +256,7 @@ const importKey = (key: ArrayBuffer, type = 'raw', mode = 'AES-GCM') => {
   * @param {string} [type] - The type of the exported key: raw|jwk
   * @returns {Promise<arrayBuffer>} - The raw key or the key as a jwk format
   */
-const exportKey = async (key: CryptoKey, type: 'raw' | 'pkcs8' | 'spki' | 'jwk' = 'raw') => {
+const exportKey = async (key: CryptoKey, type: 'pkcs8' | 'spki' | 'raw' = 'raw') => {
   const exportedKey = await window.crypto.subtle.exportKey(type, key)
   return (type === 'raw') ? new Uint8Array(exportedKey as ArrayBuffer) : exportedKey as ArrayBuffer
 }
@@ -287,8 +287,10 @@ const decryptBuffer = async <TCipherContext extends Algorithm>(key: CryptoKey, d
     const decrypted = await window.crypto.subtle.decrypt(cipherContext, key, data)
     return new Uint8Array(decrypted)
   } catch (e) {
-    if (e.message === 'Unsupported state or unable to authenticate data') {
+    if (e instanceof Error && e.message === 'Unsupported state or unable to authenticate data') {
       throw new Error('Unable to decrypt data')
+    } else if (typeof e === 'string') {
+      throw new Error(e);
     }
   }
 }
