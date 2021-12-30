@@ -190,8 +190,11 @@ const decryptBuffer = (key, data, cipherContext) => __awaiter(void 0, void 0, vo
         return new Uint8Array(decrypted);
     }
     catch (e) {
-        if (e.message === 'Unsupported state or unable to authenticate data') {
+        if (e instanceof Error && e.message === 'Unsupported state or unable to authenticate data') {
             throw new Error('Unable to decrypt data');
+        }
+        else if (typeof e === 'string') {
+            throw new Error(e);
         }
     }
 });

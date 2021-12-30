@@ -114,7 +114,7 @@ declare const genAESKey: (extractable?: boolean, mode?: string, keySize?: number
     * @param {string} [mode] - The mode of the key to import (default 'AES-GCM')
     * @returns {Promise<arrayBuffer>} - The cryptoKey
     */
-declare const importKey: (key: ArrayBuffer, type?: string, mode?: string) => Promise<CryptoKey>;
+declare const importKey: (key: ArrayBuffer, type?: 'pkcs8' | 'spki' | 'raw', mode?: string) => Promise<CryptoKey>;
 /**
   * Export a CryptoKey into a raw|jwk key
   *
@@ -122,7 +122,7 @@ declare const importKey: (key: ArrayBuffer, type?: string, mode?: string) => Pro
   * @param {string} [type] - The type of the exported key: raw|jwk
   * @returns {Promise<arrayBuffer>} - The raw key or the key as a jwk format
   */
-declare const exportKey: (key: CryptoKey, type?: 'raw' | 'pkcs8' | 'spki' | 'jwk') => Promise<ArrayBuffer>;
+declare const exportKey: (key: CryptoKey, type?: 'pkcs8' | 'spki' | 'raw') => Promise<ArrayBuffer>;
 /**
    * Encrypt buffer
    *
