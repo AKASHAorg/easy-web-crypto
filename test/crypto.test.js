@@ -316,8 +316,26 @@ describe('Web crypto', function () {
       chai.assert.isTrue(valid)
     })
 
+    it('Should sign/verify data using base64 as default format for signatures with a data string', async () => {
+      const data = 'foobar';
+      const keys = await WebCrypto.genKeyPair()
+
+      const sig = await WebCrypto.sign(keys.privateKey, data)
+      const valid = await WebCrypto.verify(keys.publicKey, data, sig)
+      chai.assert.isTrue(valid)
+    })
+
     it('Should sign/verify data using raw format for signatures', async () => {
       const data = { foo: 'bar' }
+      const keys = await WebCrypto.genKeyPair()
+
+      const sig = await WebCrypto.sign(keys.privateKey, data, 'raw')
+      const valid = await WebCrypto.verify(keys.publicKey, data, sig, 'raw')
+      chai.assert.isTrue(valid)
+    })
+
+    it('Should sign/verify data using raw format for signatures with a data string', async () => {
+      const data = 'foobar';
       const keys = await WebCrypto.genKeyPair()
 
       const sig = await WebCrypto.sign(keys.privateKey, data, 'raw')
