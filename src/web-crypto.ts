@@ -307,7 +307,7 @@ const encrypt = async (key: CryptoKey, data: string | object, format: BufferEnco
   checkCryptokey(key)
   const context = {
     iv: genRandomBuffer(key.algorithm.name === 'AES-GCM' ? 12 : 16),
-    plaintext: Buffer.from(typeof data === "string" ? data : JSON.stringify(data))
+    plaintext: Buffer.from(JSON.stringify(data))
   }
 
   // Prepare cipher context, depends on cipher mode
