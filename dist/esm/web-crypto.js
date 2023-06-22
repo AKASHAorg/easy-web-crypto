@@ -110,7 +110,7 @@ const sign = (key, data, format = 'base64', hash = 'SHA-256') => __awaiter(void 
     const signature = yield window.crypto.subtle.sign({
         name: 'ECDSA',
         hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
-    }, key, Buffer.from(JSON.stringify(data)));
+    }, key, Buffer.from(typeof data === "string" ? data : JSON.stringify(data)));
     return (format === 'raw') ? new Uint8Array(signature) : Buffer.from(signature).toString(format);
 });
 /**
@@ -125,7 +125,7 @@ const verify = (key, data, signature, format = 'base64', hash = 'SHA-256') => __
     return window.crypto.subtle.verify({
         name: 'ECDSA',
         hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
-    }, key, Buffer.from(signature, format), Buffer.from(JSON.stringify(data)));
+    }, key, Buffer.from(signature, format), Buffer.from(typeof data === "string" ? data : JSON.stringify(data)));
 });
 /**
    * Generate an AES key based on the cipher mode and keysize

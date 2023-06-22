@@ -193,7 +193,7 @@ const sign = async (key: CryptoKey, data: any, format: KeyBufferEncoding = 'base
       hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     },
     key,
-    Buffer.from(JSON.stringify(data))
+    Buffer.from(typeof data === "string" ? data : JSON.stringify(data))
   )
   return (format === 'raw') ? new Uint8Array(signature) : Buffer.from(signature).toString(format)
 }
@@ -214,7 +214,7 @@ const verify = async (key: CryptoKey, data: any, signature: string, format: Buff
     },
     key,
     Buffer.from(signature, format),
-    Buffer.from(JSON.stringify(data))
+    Buffer.from(typeof data === "string" ? data : JSON.stringify(data))
   )
 }
 
