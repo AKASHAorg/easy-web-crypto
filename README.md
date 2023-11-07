@@ -21,7 +21,7 @@ npm install --save easy-web-crypto
 
 Either host `dist/web-crypto.js` yourself or use jsDelivr like this:
 ```html
-<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/easy-web-crypto@1.3.1/dist/cjs/web-crypto.js"></script>
+<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/easy-web-crypto@1.2.6/dist/cjs/web-crypto.js"></script>
 ```
 *You can use `window.WebCrypto` to access the API after installing.*
 
