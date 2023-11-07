@@ -41,7 +41,8 @@ It supports the following optional parameters: `extractable` (defaults to true),
 that accepts `P-256`, `P-384`, and `P-521` (defaults to `P-256`).
 
 ```js
-const WebCrypto = require('easy-web-crypto')
+// Assuming you have loaded the easy-web-crypto library in your HTML file
+const WebCrypto = window.WebCrypto
 
 // generate an ECDA P-256 key pair
 const keyPair = await WebCrypto.genKeyPair()
