@@ -18,7 +18,7 @@ const checkCryptokey = (key) => {
     }
 };
 const genRandomBuffer = (len = 16) => {
-    const values = window.crypto.getRandomValues(new Uint8Array(len));
+    const values = globalThis.crypto.getRandomValues(new Uint8Array(len));
     return Buffer.from(values);
 };
 const genRandomBufferAsStr = (len = 16, encodingFormat = 'hex') => {
@@ -56,7 +56,7 @@ const genId = (len = 32) => {
  * @returns {Promise<String>}  A promise that contains the hash as a String encoded with encodingFormat
  */
 const hash = (data, format = 'hex', name = 'SHA-256') => __awaiter(void 0, void 0, void 0, function* () {
-    const digest = yield window.crypto.subtle.digest({
+    const digest = yield globalThis.crypto.subtle.digest({
         name
     }, (typeof data === 'string') ? Buffer.from(data) : data);
     return Buffer.from(digest).toString(format);
@@ -69,32 +69,32 @@ const hash = (data, format = 'hex', name = 'SHA-256') => __awaiter(void 0, void 
    * @returns {Promise<CryptoKey>} - A promise containing the key pair
    */
 const genKeyPair = (extractable = true, namedCurve = 'P-256') => {
-    return window.crypto.subtle.generateKey({
+    return globalThis.crypto.subtle.generateKey({
         name: 'ECDSA',
         namedCurve // can be "P-256", "P-384", or "P-521"
     }, extractable, ['sign', 'verify']);
 };
 function importPublicKey(key, namedCurve = 'P-256', format = 'base64') {
-    return window.crypto.subtle.importKey('spki', typeof key === 'string' ? Buffer.from(key, format) : key, {
+    return globalThis.crypto.subtle.importKey('spki', typeof key === 'string' ? Buffer.from(key, format) : key, {
         name: 'ECDSA',
         namedCurve // can be "P-256", "P-384", or "P-521"
     }, true, ['verify']);
 }
 function importPrivateKey(key, namedCurve = 'P-256', format = 'base64') {
-    return window.crypto.subtle.importKey('pkcs8', typeof key === 'string' ? Buffer.from(key, format) : key, {
+    return globalThis.crypto.subtle.importKey('pkcs8', typeof key === 'string' ? Buffer.from(key, format) : key, {
         name: 'ECDSA',
         namedCurve // can be "P-256", "P-384", or "P-521"
     }, true, ['sign']);
 }
 function exportPublicKey(key, format = 'base64') {
     return __awaiter(this, void 0, void 0, function* () {
-        const exported = yield window.crypto.subtle.exportKey('spki', key);
+        const exported = yield globalThis.crypto.subtle.exportKey('spki', key);
         return (format === 'raw') ? new Uint8Array(exported) : Buffer.from(exported).toString(format);
     });
 }
 function exportPrivateKey(key, format = 'base64') {
     return __awaiter(this, void 0, void 0, function* () {
-        const exported = yield window.crypto.subtle.exportKey('pkcs8', key);
+        const exported = yield globalThis.crypto.subtle.exportKey('pkcs8', key);
         return (format === 'raw') ? new Uint8Array(exported) : Buffer.from(exported).toString(format);
     });
 }
@@ -107,7 +107,7 @@ function exportPrivateKey(key, format = 'base64') {
  * @returns {Promise<arrayBuffer>} - The raw signature
  */
 const sign = (key, data, format = 'base64', hash = 'SHA-256') => __awaiter(void 0, void 0, void 0, function* () {
-    const signature = yield window.crypto.subtle.sign({
+    const signature = yield globalThis.crypto.subtle.sign({
         name: 'ECDSA',
         hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     }, key, Buffer.from(typeof data === "string" ? data : JSON.stringify(data)));
@@ -122,7 +122,7 @@ const sign = (key, data, format = 'base64', hash = 'SHA-256') => __awaiter(void 
  * @returns {Promise<boolean>} - The verification outcome
  */
 const verify = (key, data, signature, format = 'base64', hash = 'SHA-256') => __awaiter(void 0, void 0, void 0, function* () {
-    return window.crypto.subtle.verify({
+    return globalThis.crypto.subtle.verify({
         name: 'ECDSA',
         hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     }, key, Buffer.from(signature, format), Buffer.from(typeof data === "string" ? data : JSON.stringify(data)));
@@ -136,7 +136,7 @@ const verify = (key, data, signature, format = 'base64', hash = 'SHA-256') => __
    * @returns {Promise<CryptoKey>} - The generated AES key.
    */
 const genAESKey = (extractable = true, mode = 'AES-GCM', keySize = 128) => {
-    return window.crypto.subtle.generateKey({
+    return globalThis.crypto.subtle.generateKey({
         name: mode,
         length: keySize
     }, extractable, ['decrypt', 'encrypt']);
@@ -151,7 +151,7 @@ const genAESKey = (extractable = true, mode = 'AES-GCM', keySize = 128) => {
     */
 const importKey = (key, type = 'raw', mode = 'AES-GCM') => {
     const parsedKey = (type === 'raw') ? Buffer.from(key, 'base64') : key;
-    return window.crypto.subtle.importKey(type, parsedKey, { name: mode }, true, ['encrypt', 'decrypt']);
+    return globalThis.crypto.subtle.importKey(type, parsedKey, { name: mode }, true, ['encrypt', 'decrypt']);
 };
 /**
   * Export a CryptoKey into a raw|jwk key
@@ -161,7 +161,7 @@ const importKey = (key, type = 'raw', mode = 'AES-GCM') => {
   * @returns {Promise<arrayBuffer>} - The raw key or the key as a jwk format
   */
 const exportKey = (key, type = 'raw') => __awaiter(void 0, void 0, void 0, function* () {
-    const exportedKey = yield window.crypto.subtle.exportKey(type, key);
+    const exportedKey = yield globalThis.crypto.subtle.exportKey(type, key);
     return (type === 'raw') ? new Uint8Array(exportedKey) : exportedKey;
 });
 /**
@@ -173,7 +173,7 @@ const exportKey = (key, type = 'raw') => __awaiter(void 0, void 0, void 0, funct
    * @returns {ArrayBuffer} - The encrypted buffer
    */
 const encryptBuffer = (key, data, cipherContext) => __awaiter(void 0, void 0, void 0, function* () {
-    const encrypted = yield window.crypto.subtle.encrypt(cipherContext, key, data);
+    const encrypted = yield globalThis.crypto.subtle.encrypt(cipherContext, key, data);
     return new Uint8Array(encrypted);
 });
 /**
@@ -186,7 +186,7 @@ const encryptBuffer = (key, data, cipherContext) => __awaiter(void 0, void 0, vo
 const decryptBuffer = (key, data, cipherContext) => __awaiter(void 0, void 0, void 0, function* () {
     // TODO: test input params
     try {
-        const decrypted = yield window.crypto.subtle.decrypt(cipherContext, key, data);
+        const decrypted = yield globalThis.crypto.subtle.decrypt(cipherContext, key, data);
         return new Uint8Array(decrypted);
     }
     catch (e) {
@@ -267,8 +267,8 @@ const deriveBits = (passPhrase, salt, iterations, hashAlgo) => __awaiter(void 0,
     if (iterations < 10000) {
         console.warn('Less than 10000 :(');
     }
-    const baseKey = yield window.crypto.subtle.importKey('raw', (typeof passPhrase === 'string') ? Buffer.from(passPhrase) : passPhrase, 'PBKDF2', false, ['deriveBits', 'deriveKey']);
-    const derivedKey = yield window.crypto.subtle.deriveBits({
+    const baseKey = yield globalThis.crypto.subtle.importKey('raw', (typeof passPhrase === 'string') ? Buffer.from(passPhrase) : passPhrase, 'PBKDF2', false, ['deriveBits', 'deriveKey']);
+    const derivedKey = yield globalThis.crypto.subtle.deriveBits({
         name: 'PBKDF2',
         salt: salt || new Uint8Array([]),
         iterations: iterations || 100000,
@@ -368,7 +368,7 @@ const decryptMasterKey = (passPhrase, protectedMasterKey) => __awaiter(void 0, v
         const decryptedMasterKeyHex = yield decrypt(keyEncryptionKey, encryptedMasterKey);
         // return decryptedMasterKeyHex
         const parsedKey = Buffer.from(decryptedMasterKeyHex, 'hex');
-        return window.crypto.subtle.importKey('raw', parsedKey, { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
+        return globalThis.crypto.subtle.importKey('raw', parsedKey, { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
     }
     catch (error) {
         throw new Error('Wrong passphrase');

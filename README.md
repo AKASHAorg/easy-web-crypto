@@ -23,7 +23,7 @@ Either host `dist/web-crypto.js` yourself or use jsDelivr like this:
 ```html
 <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/easy-web-crypto@1.3.2/dist/cjs/web-crypto.js"></script>
 ```
-*You can use `window.WebCrypto` to access the API after installing.*
+*You can use `globalThis.WebCrypto` to access the API after installing.*
 
 # Usage
 
@@ -42,7 +42,7 @@ that accepts `P-256`, `P-384`, and `P-521` (defaults to `P-256`).
 
 ```js
 // Assuming you have loaded the easy-web-crypto library in your HTML file
-const WebCrypto = window.WebCrypto
+const WebCrypto = globalThis.WebCrypto
 
 // generate an ECDA P-256 key pair
 const keyPair = await WebCrypto.genKeyPair()

@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* global chai */
 
-const WebCrypto = window.WebCrypto
+const WebCrypto = globalThis.WebCrypto
 
 describe('Web crypto', function () {
   context('Generating a random buffer (for iv)', () => {

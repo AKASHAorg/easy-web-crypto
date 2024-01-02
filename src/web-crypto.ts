@@ -28,7 +28,7 @@ const checkCryptokey = (key: CryptoKey) => {
 }
 
 const genRandomBuffer = (len = 16) => {
-  const values = window.crypto.getRandomValues(new Uint8Array(len))
+  const values = globalThis.crypto.getRandomValues(new Uint8Array(len))
   return Buffer.from(values)
 }
 
@@ -70,7 +70,7 @@ const genId = (len = 32) => {
  * @returns {Promise<String>}  A promise that contains the hash as a String encoded with encodingFormat
  */
 const hash = async (data: string | ArrayBuffer, format: BufferEncoding = 'hex', name = 'SHA-256') => {
-  const digest = await window.crypto.subtle.digest(
+  const digest = await globalThis.crypto.subtle.digest(
     {
       name
     },
@@ -87,7 +87,7 @@ const hash = async (data: string | ArrayBuffer, format: BufferEncoding = 'hex', 
    * @returns {Promise<CryptoKey>} - A promise containing the key pair
    */
 const genKeyPair = (extractable = true, namedCurve = 'P-256') => {
-  return window.crypto.subtle.generateKey(
+  return globalThis.crypto.subtle.generateKey(
     {
       name: 'ECDSA',
       namedCurve // can be "P-256", "P-384", or "P-521"
@@ -113,7 +113,7 @@ function importPublicKey(key: string, namedCurve: string): Promise<CryptoKey>;
 function importPublicKey<TFormat extends KeyBufferEncoding>(key: SelectKeyType<TFormat>, namedCurve: string, format: TFormat): Promise<CryptoKey>;
 
 function importPublicKey(key: string | Uint8Array, namedCurve = 'P-256', format: KeyBufferEncoding = 'base64') {
-  return window.crypto.subtle.importKey(
+  return globalThis.crypto.subtle.importKey(
     'spki',
     typeof key === 'string' ? Buffer.from(key, format as BufferEncoding) : key,
     {
@@ -137,7 +137,7 @@ function importPrivateKey(key: string, namedCurve: string): Promise<CryptoKey>;
 function importPrivateKey<TFormat extends KeyBufferEncoding>(key: SelectKeyType<TFormat>, namedCurve: string, format: TFormat): Promise<CryptoKey>;
 
 function importPrivateKey(key: string | Uint8Array, namedCurve = 'P-256', format: KeyBufferEncoding = 'base64') {
-  return window.crypto.subtle.importKey(
+  return globalThis.crypto.subtle.importKey(
     'pkcs8',
     typeof key === 'string' ? Buffer.from(key, format as BufferEncoding) : key,
     {
@@ -160,7 +160,7 @@ function exportPublicKey(key: CryptoKey): Promise<string>;
 function exportPublicKey<TFormat extends KeyBufferEncoding> (key: CryptoKey, format: TFormat): Promise<SelectKeyType<TFormat>>;
 
 async function exportPublicKey(key: CryptoKey, format: KeyBufferEncoding = 'base64') {
-  const exported = await window.crypto.subtle.exportKey('spki', key)
+  const exported = await globalThis.crypto.subtle.exportKey('spki', key)
   return (format === 'raw') ? new Uint8Array(exported) : Buffer.from(exported).toString(format)
 }
 
@@ -174,7 +174,7 @@ function exportPrivateKey(key: CryptoKey): Promise<string>;
 function exportPrivateKey<TFormat extends KeyBufferEncoding> (key: CryptoKey, format: TFormat): Promise<SelectKeyType<TFormat>>;
  
 async function exportPrivateKey(key: CryptoKey, format: KeyBufferEncoding = 'base64') {
-  const exported = await window.crypto.subtle.exportKey('pkcs8', key)
+  const exported = await globalThis.crypto.subtle.exportKey('pkcs8', key)
   return (format === 'raw') ? new Uint8Array(exported) : Buffer.from(exported).toString(format)
 }
 
@@ -187,7 +187,7 @@ async function exportPrivateKey(key: CryptoKey, format: KeyBufferEncoding = 'bas
  * @returns {Promise<arrayBuffer>} - The raw signature
  */
 const sign = async (key: CryptoKey, data: any, format: KeyBufferEncoding = 'base64', hash = 'SHA-256') => {
-  const signature = await window.crypto.subtle.sign(
+  const signature = await globalThis.crypto.subtle.sign(
     {
       name: 'ECDSA',
       hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
@@ -207,7 +207,7 @@ const sign = async (key: CryptoKey, data: any, format: KeyBufferEncoding = 'base
  * @returns {Promise<boolean>} - The verification outcome
  */
 const verify = async (key: CryptoKey, data: any, signature: string, format: BufferEncoding = 'base64', hash = 'SHA-256') => {
-  return window.crypto.subtle.verify(
+  return globalThis.crypto.subtle.verify(
     {
       name: 'ECDSA',
       hash: { name: hash } // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
@@ -227,7 +227,7 @@ const verify = async (key: CryptoKey, data: any, signature: string, format: Buff
    * @returns {Promise<CryptoKey>} - The generated AES key.
    */
 const genAESKey = (extractable = true, mode = 'AES-GCM', keySize = 128) => {
-  return window.crypto.subtle.generateKey({
+  return globalThis.crypto.subtle.generateKey({
     name: mode,
     length: keySize
   },
@@ -245,7 +245,7 @@ const genAESKey = (extractable = true, mode = 'AES-GCM', keySize = 128) => {
     */
 const importKey = (key: ArrayBuffer, type: 'pkcs8' | 'spki' | 'raw' = 'raw', mode = 'AES-GCM') => {
   const parsedKey = (type === 'raw') ? Buffer.from(key as unknown as string, 'base64') : key
-  return window.crypto.subtle.importKey(type, parsedKey, { name: mode }
+  return globalThis.crypto.subtle.importKey(type, parsedKey, { name: mode }
     , true, ['encrypt', 'decrypt'])
 }
 
@@ -257,7 +257,7 @@ const importKey = (key: ArrayBuffer, type: 'pkcs8' | 'spki' | 'raw' = 'raw', mod
   * @returns {Promise<arrayBuffer>} - The raw key or the key as a jwk format
   */
 const exportKey = async (key: CryptoKey, type: 'pkcs8' | 'spki' | 'raw' = 'raw') => {
-  const exportedKey = await window.crypto.subtle.exportKey(type, key)
+  const exportedKey = await globalThis.crypto.subtle.exportKey(type, key)
   return (type === 'raw') ? new Uint8Array(exportedKey as ArrayBuffer) : exportedKey as ArrayBuffer
 }
 
@@ -270,7 +270,7 @@ const exportKey = async (key: CryptoKey, type: 'pkcs8' | 'spki' | 'raw' = 'raw')
    * @returns {ArrayBuffer} - The encrypted buffer
    */
 const encryptBuffer = async <TCipherContext extends Algorithm>(key: CryptoKey, data: Buffer, cipherContext: TCipherContext) => {
-  const encrypted = await window.crypto.subtle.encrypt(cipherContext, key, data)
+  const encrypted = await globalThis.crypto.subtle.encrypt(cipherContext, key, data)
   return new Uint8Array(encrypted)
 }
 
@@ -284,7 +284,7 @@ const encryptBuffer = async <TCipherContext extends Algorithm>(key: CryptoKey, d
 const decryptBuffer = async <TCipherContext extends Algorithm>(key: CryptoKey, data: ArrayBuffer, cipherContext: TCipherContext) => {
   // TODO: test input params
   try {
-    const decrypted = await window.crypto.subtle.decrypt(cipherContext, key, data)
+    const decrypted = await globalThis.crypto.subtle.decrypt(cipherContext, key, data)
     return new Uint8Array(decrypted)
   } catch (e) {
     if (e instanceof Error && e.message === 'Unsupported state or unable to authenticate data') {
@@ -368,14 +368,14 @@ const deriveBits = async (passPhrase: string | ArrayBuffer, salt: ArrayBuffer, i
   // Always specify a strong salt
   if (iterations < 10000) { console.warn('Less than 10000 :(') }
 
-  const baseKey = await window.crypto.subtle.importKey(
+  const baseKey = await globalThis.crypto.subtle.importKey(
     'raw',
     (typeof passPhrase === 'string') ? Buffer.from(passPhrase) : passPhrase,
     'PBKDF2',
     false,
     ['deriveBits', 'deriveKey']
   )
-  const derivedKey = await window.crypto.subtle.deriveBits({
+  const derivedKey = await globalThis.crypto.subtle.deriveBits({
     name: 'PBKDF2',
     salt: salt || new Uint8Array([]),
     iterations: iterations || 100000,
@@ -487,7 +487,7 @@ const decryptMasterKey = async (passPhrase: string, protectedMasterKey: Protecte
     const decryptedMasterKeyHex = await decrypt(keyEncryptionKey, encryptedMasterKey)
     // return decryptedMasterKeyHex
     const parsedKey = Buffer.from(decryptedMasterKeyHex, 'hex')
-    return window.crypto.subtle.importKey('raw', parsedKey, { name: 'AES-GCM' }
+    return globalThis.crypto.subtle.importKey('raw', parsedKey, { name: 'AES-GCM' }
       , true, ['encrypt', 'decrypt'])
   } catch (error) {
     throw new Error('Wrong passphrase')
