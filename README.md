@@ -1,5 +1,7 @@
 # Easy-web-crypto
 
+> **Note:** Active development of this library continues in [deiu/easy-web-crypto](https://github.com/deiu/easy-web-crypto). The `easy-web-crypto` package on npm is published from that repository, starting with version 2.0.0.
+
 [![Build Status](https://api.travis-ci.org/AKASHAorg/easy-web-crypto.svg?branch=master)](https://travis-ci.org/AKASHAorg/easy-web-crypto)
 
 This is a wrapper around the WebCrypto API available in modern browsers. It enables fast
